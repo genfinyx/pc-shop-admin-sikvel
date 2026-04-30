@@ -1,0 +1,77 @@
+/* ===== СПЕЦИФИЧНО ДЛЯ ORDER TABLE ===== */
+
+.order-input {
+  background-color: #1a2234 !important;
+  border: 1px solid #4b5563 !important;
+  color: #e5e7eb !important;
+  padding: 0.4rem 0.6rem !important;
+  border-radius: 6px !important;
+  font-size: 0.85rem !important;
+  height: 38px;
+  width: 100%;
+}
+
+.order-input:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3) !important;
+  outline: none !important;
+}
+
+.order-select {
+  background-color: #1a2234 !important;
+  border: 1px solid #4b5563 !important;
+  color: #e5e7eb !important;
+  padding: 0.4rem 0.6rem !important;
+  border-radius: 6px !important;
+  font-size: 0.85rem !important;
+  height: 38px;
+  width: 100%;
+  cursor: pointer;
+}
+
+.order-select:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3) !important;
+  outline: none !important;
+}
+
+.order-textarea {
+  background-color: #1a2234 !important;
+  border: 1px solid #4b5563 !important;
+  color: #e5e7eb !important;
+  padding: 0.6rem !important;
+  border-radius: 6px !important;
+  font-size: 0.85rem !important;
+  width: 100%;
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* КАЛЕНДАРИК КАК В UserTable - ЧЁРНЫЙ С БЕЛОЙ ИКОНКОЙ */
+.order-date-picker {
+  background-color: #1a2234 !important;
+  border: 1px solid #4b5563 !important;
+  color: #e5e7eb !important;
+  padding: 0.4rem 0.6rem !important;
+  border-radius: 6px !important;
+  font-size: 0.85rem !important;
+  height: 38px;
+  width: 100%;
+  color-scheme: white;
+}
+
+.order-date-picker:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3) !important;
+  outline: none !important;
+}
+
+.order-date-picker::-webkit-calendar-picker-indicator {
+  filter: invert(1); /* Белая иконка */
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.order-date-picker::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}

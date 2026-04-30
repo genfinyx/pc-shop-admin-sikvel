@@ -1,0 +1,36 @@
+/* ===== СПЕЦИФИЧНО ДЛЯ CATEGORY TABLE ===== */
+
+.category-input {
+  background-color: #1a2234 !important;
+  border: 1px solid #4b5563 !important;
+  color: #e5e7eb !important;
+  padding: 0.4rem 0.6rem !important;
+  border-radius: 6px !important;
+  font-size: 0.85rem !important;
+  height: 38px;
+  width: 100%;
+}
+
+.category-input:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3) !important;
+  outline: none !important;
+}
+
+.category-textarea {
+  background-color: #1a2234 !important;
+  border: 1px solid #4b5563 !important;
+  color: #e5e7eb !important;
+  padding: 0.6rem !important;
+  border-radius: 6px !important;
+  font-size: 0.85rem !important;
+  width: 100%;
+  resize: vertical;
+  min-height: 80px;
+}
+
+.category-textarea:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3) !important;
+  outline: none !important;
+}

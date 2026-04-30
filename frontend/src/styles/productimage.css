@@ -1,0 +1,66 @@
+/* ===== СПЕЦИФИЧНО ДЛЯ PRODUCT IMAGE TABLE ===== */
+
+.productimage-input {
+  background-color: #1a2234 !important;
+  border: 1px solid #4b5563 !important;
+  color: #e5e7eb !important;
+  padding: 0.4rem 0.6rem !important;
+  border-radius: 6px !important;
+  font-size: 0.85rem !important;
+  height: 38px;
+  width: 100%;
+}
+
+.productimage-input:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3) !important;
+  outline: none !important;
+}
+
+.productimage-select {
+  background-color: #1a2234 !important;
+  border: 1px solid #4b5563 !important;
+  color: #e5e7eb !important;
+  padding: 0.4rem 0.6rem !important;
+  border-radius: 6px !important;
+  font-size: 0.85rem !important;
+  height: 38px;
+  width: 100%;
+  cursor: pointer;
+}
+
+.productimage-select:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3) !important;
+  outline: none !important;
+}
+
+/* Путь к изображению */
+.productimage-path {
+  color: #60a5fa;
+  font-family: monospace;
+  font-size: 0.8rem;
+  cursor: help;
+  border-bottom: 1px dashed #4b5563;
+}
+
+.productimage-path:hover {
+  color: #93c5fd;
+}
+
+/* Предпросмотр (для будущего функционала) */
+.productimage-preview {
+  width: 30px;
+  height: 30px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid #4b5563;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.productimage-preview:hover {
+  transform: scale(2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  z-index: 100;
+}

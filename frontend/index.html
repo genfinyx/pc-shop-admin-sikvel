@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <link rel="stylesheet" href="/src/styles/modal.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PC Shop Admin</title>
+  <style>
+    input[type="datetime-local"],
+    input[type="date"] {
+      color-scheme: white !important;
+    }
+
+    .white-calendar {
+      color-scheme: white !important;
+    }
+  </style>
+</head>
+<body>
+<!-- LOADING SCREEN -->
+<div id="loading-screen">
+  <h1 class="title">Загрузка приложения</h1>
+  <div class="progress-wrapper">
+    <div class="progress-bar">
+      <div id="progress"></div>
+    </div>
+    <div id="percent">0%</div>
+  </div>
+  <div id="loading-text">Инициализация...</div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" style="display: none;"></div>
+<style src="./styles/style.css"></style>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>

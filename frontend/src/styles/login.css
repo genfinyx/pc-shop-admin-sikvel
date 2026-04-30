@@ -1,0 +1,129 @@
+/* ===== СПЕЦИФИЧНО ДЛЯ LOGIN ===== */
+
+.login-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at top, #1f2937, #020617);
+  padding: 20px;
+}
+
+.login-card {
+  max-width: 400px;
+  width: 100%;
+  background: rgba(15, 23, 42, 0.96);
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  padding: 2rem;
+  box-shadow: 0 22px 45px rgba(15, 23, 42, 0.9);
+}
+
+/* Логотип на логине (чуть больше) */
+.login-card .logo-square {
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  font-size: 1.8rem;
+  margin-right: 1rem;
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.4);
+}
+
+.brand-title {
+  color: white;
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+
+.brand-subtitle {
+  color: #9ca3af;
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+
+/* Поля ввода */
+.form-label {
+  color: #f0f4fa !important;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  display: block;
+  font-size: 0.95rem;
+}
+
+.form-control {
+  width: 100%;
+  background-color: #020617;
+  border: 1px solid #334155;
+  color: #e5e7eb;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.form-control:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+  outline: none;
+  background-color: #0b1120;
+}
+
+.form-control::placeholder {
+  color: #6b7280;
+  opacity: 0.8;
+  font-size: 0.95rem;
+}
+
+/* Кнопка входа (специфичная) */
+.login-card .btn-primary {
+  width: 100%;
+  padding: 0.85rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 1rem;
+  letter-spacing: 0.5px;
+}
+
+.login-card .btn-primary:hover {
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.4);
+}
+
+/* Подвал */
+.footer-text {
+  color: #6b7280;
+  font-size: 0.85rem;
+  display: block;
+  text-align: center;
+}
+
+/* Ошибка */
+.error-message {
+  color: #ef4444;
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  display: none;
+  padding: 0.5rem;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 8px;
+  border-left: 3px solid #ef4444;
+}
+
+/* Отступы */
+.mb-4 {
+  margin-bottom: 1.5rem;
+}
+
+.mt-4 {
+  margin-top: 2rem;
+}

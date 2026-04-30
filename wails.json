@@ -1,0 +1,13 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "pc-shop-admin",
+  "outputfilename": "pc-shop-admin",
+  "frontend:install": "npm install",
+  "frontend:build": "npm run build",
+  "frontend:dev:watcher": "npm run dev",
+  "frontend:dev:serverUrl": "auto",
+  "author": {
+    "name": "Evgeniy Kush",
+    "email": "TheJekichan@gmail.com"
+  }
+}

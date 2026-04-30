@@ -1,0 +1,201 @@
+CREATE DATABASE IF NOT EXISTS pc_shop_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE pc_shop_db;
+
+-- Категории
+CREATE TABLE Category (
+    category_id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    parent_category_id INT NULL,
+    main_image_path VARCHAR(255),
+    FOREIGN KEY (parent_category_id) REFERENCES Category(category_id) ON DELETE CASCADE
+);
+
+-- Пользователи
+CREATE TABLE User (
+    idUser INT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    phone VARCHAR(20) UNIQUE,
+    reg_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    role ENUM('Customer', 'Employee', 'Administrator') DEFAULT 'Customer',
+    first_name VARCHAR(45) NOT NULL,
+    last_name VARCHAR(45) NOT NULL,
+    middle_name VARCHAR(45),
+    is_active BOOLEAN DEFAULT TRUE
+);
+
+-- Товары
+CREATE TABLE Product (
+    product_id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    price DECIMAL(12,2) NOT NULL,
+    discount_price DECIMAL(12,2) NULL,
+    discount_start DATETIME NULL,
+    discount_end DATETIME NULL,
+    stock INT DEFAULT 0,
+    category_id INT,
+    main_image_path VARCHAR(255),
+    is_available BOOLEAN DEFAULT TRUE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (category_id) REFERENCES Category(category_id) ON DELETE SET NULL
+);
+
+-- Дополнительные изображения
+CREATE TABLE Product_Image (
+    image_id INT PRIMARY KEY AUTO_INCREMENT,
+    product_id INT NOT NULL,
+    image_path VARCHAR(255) NOT NULL,
+    sort_order INT DEFAULT 0,
+    FOREIGN KEY (product_id) REFERENCES Product(product_id) ON DELETE CASCADE
+);
+
+-- Заказы
+CREATE TABLE `Order` (
+    order_id INT PRIMARY KEY AUTO_INCREMENT,
+    order_number VARCHAR(50) UNIQUE NOT NULL,
+    order_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    status ENUM('new', 'processing', 'paid', 'cancelled', 'completed') DEFAULT 'new',
+    payment_method ENUM('cash', 'card_online', 'card_courier', 'invoice'),
+    payment_status ENUM('pending', 'paid', 'refunded') DEFAULT 'pending',
+    user_id INT,
+    notes TEXT,
+    FOREIGN KEY (user_id) REFERENCES User(idUser) ON DELETE SET NULL
+);
+
+-- Доставка
+CREATE TABLE Delivery (
+    delivery_id INT PRIMARY KEY AUTO_INCREMENT,
+    order_id INT NOT NULL UNIQUE,
+    address VARCHAR(255) NOT NULL,
+    delivery_date DATETIME,
+    status ENUM('processing', 'shipped', 'delivered', 'returned') DEFAULT 'processing',
+    recipient_name VARCHAR(150),
+    tracking_number VARCHAR(50),
+    delivered_at DATETIME NULL,
+    FOREIGN KEY (order_id) REFERENCES `Order`(order_id) ON DELETE CASCADE
+);
+
+-- Позиции заказа
+CREATE TABLE Order_Item (
+    order_item_id INT PRIMARY KEY AUTO_INCREMENT,
+    quantity INT NOT NULL,
+    price DECIMAL(12,2) NOT NULL,
+    order_id INT,
+    product_id INT,
+    FOREIGN KEY (order_id) REFERENCES `Order`(order_id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES Product(product_id) ON DELETE RESTRICT
+);
+
+-- Корзина
+CREATE TABLE Cart_Item (
+    cart_item_id INT PRIMARY KEY AUTO_INCREMENT,
+    quantity INT NOT NULL,
+    user_id INT,
+    product_id INT,
+    added_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES User(idUser) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES Product(product_id) ON DELETE CASCADE
+);
+
+-- ============================================
+-- НАКЛАДНЫЕ (ПРОСТО И ПОНЯТНО)
+-- ============================================
+
+-- ПРИХОДНАЯ НАКЛАДНАЯ (товары от поставщиков)
+CREATE TABLE Invoice_In (
+    invoice_in_id INT PRIMARY KEY AUTO_INCREMENT,
+    invoice_number VARCHAR(50) NOT NULL,
+    invoice_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL,
+    purchase_price DECIMAL(12,2) NOT NULL,
+    supplier VARCHAR(100),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (product_id) REFERENCES Product(product_id) ON DELETE CASCADE
+);
+
+-- РАСХОДНАЯ НАКЛАДНАЯ (товары клиентам)
+-- Данные берутся из Order_Item, но для удобства отчётов храним отдельно
+CREATE TABLE Invoice_Out (
+    invoice_out_id INT PRIMARY KEY AUTO_INCREMENT,
+    invoice_number VARCHAR(50) NOT NULL,
+    invoice_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    order_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL,
+    price DECIMAL(12,2) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (order_id) REFERENCES `Order`(order_id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES Product(product_id) ON DELETE CASCADE
+);
+
+-- Отзывы
+CREATE TABLE Review (
+    review_id INT PRIMARY KEY AUTO_INCREMENT,
+    product_id INT NOT NULL,
+    user_id INT NOT NULL,
+    rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
+    comment TEXT,
+    advantages TEXT,
+    disadvantages TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    is_approved BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (product_id) REFERENCES Product(product_id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES User(idUser) ON DELETE CASCADE,
+    UNIQUE KEY unique_user_product_review (user_id, product_id)
+);
+
+-- Избранное
+CREATE TABLE Wishlist (
+    wishlist_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    product_id INT NOT NULL,
+    added_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES User(idUser) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES Product(product_id) ON DELETE CASCADE,
+    UNIQUE KEY unique_user_product_wishlist (user_id, product_id)
+);
+
+-- Таблица чеков (Receipts)
+CREATE TABLE IF NOT EXISTS Receipt (
+    receipt_id INT PRIMARY KEY AUTO_INCREMENT,
+    receipt_number VARCHAR(50) UNIQUE NOT NULL,
+    receipt_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    order_id INT NOT NULL,
+    total_amount DECIMAL(12,2) NOT NULL,
+    payment_method VARCHAR(50),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (order_id) REFERENCES `Order`(order_id) ON DELETE CASCADE
+);
+
+-- Индексы
+CREATE INDEX idx_user_email ON User(email);
+CREATE INDEX idx_user_username ON User(username);
+CREATE INDEX idx_user_phone ON User(phone);
+CREATE INDEX idx_user_active ON User(is_active);
+CREATE INDEX idx_product_category ON Product(category_id);
+CREATE INDEX idx_product_available ON Product(is_available);
+CREATE INDEX idx_order_user ON `Order`(user_id);
+CREATE INDEX idx_order_status ON `Order`(status);
+CREATE INDEX idx_order_date ON `Order`(order_date);
+CREATE INDEX idx_delivery_order ON Delivery(order_id);
+CREATE INDEX idx_order_item_order ON Order_Item(order_id);
+CREATE INDEX idx_order_item_product ON Order_Item(product_id);
+CREATE INDEX idx_cart_item_user ON Cart_Item(user_id);
+CREATE INDEX idx_cart_item_product ON Cart_Item(product_id);
+CREATE INDEX idx_invoice_in_product ON Invoice_In(product_id);
+CREATE INDEX idx_invoice_in_date ON Invoice_In(invoice_date);
+CREATE INDEX idx_invoice_out_order ON Invoice_Out(order_id);
+CREATE INDEX idx_invoice_out_product ON Invoice_Out(product_id);
+CREATE INDEX idx_invoice_out_date ON Invoice_Out(invoice_date);
+CREATE INDEX idx_review_product ON Review(product_id);
+CREATE INDEX idx_review_user ON Review(user_id);
+CREATE INDEX idx_wishlist_user ON Wishlist(user_id);
+CREATE INDEX idx_wishlist_product ON Wishlist(product_id);
+CREATE INDEX idx_receipt_order ON Receipt(order_id);
+CREATE INDEX idx_receipt_date ON Receipt(receipt_date);
+CREATE INDEX idx_receipt_number ON Receipt(receipt_number);
