@@ -397,10 +397,10 @@ export class ProductImageTable extends BaseTable {
   renderRow(row, columns) {
     return `
       <tr>
-        <td style="padding: 0.75rem; white-space: nowrap;">${row.image_id || ''}</td>
-        <td style="padding: 0.75rem; white-space: nowrap;">${this.getProductName(row.product_id)}</td>
-        <td style="padding: 0.75rem; white-space: nowrap;">${this.formatCellValue('image_path', row.image_path)}</td>
-        <td style="padding: 0.75rem; white-space: nowrap;">${row.sort_order || 0}</td>
+        <td>${row.image_id || ''}</td>
+        <td>${this.getProductName(row.product_id)}</td>
+        <td>${this.formatCellValue('image_path', row.image_path)}</td>
+        <td>${row.sort_order || 0}</td>
         <td class="text-end" style="padding: 0.75rem; white-space: nowrap;">
           <button class="btn btn-edit" onclick="tables.product_image.openEditForm(${row.image_id})">Изменить</button>
           <button class="btn btn-delete" onclick="tables.product_image.showDeleteModal(${row.image_id})">Удалить</button>

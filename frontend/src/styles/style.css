@@ -456,6 +456,7 @@ body {
 /* ===== КАРТОЧКА ТАБЛИЦЫ ===== */
 .table tbody tr {
   height: 53px;
+  line-height: 24px;
 }
 
 .table tbody td {
