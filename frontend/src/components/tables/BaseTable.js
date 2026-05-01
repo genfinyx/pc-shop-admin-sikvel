@@ -100,7 +100,7 @@ export class BaseTable {
               <button type="submit" class="btn btn-search">🔍 Поиск</button>
             </form>
           </div>
-          <button class="btn btn-primary" onclick="tables.${this.getTableName()}.openCreateForm()" style="margin-left: -4px">+ Добавить</button>
+          <button class="btn btn-primary" onclick="tables.${this.getTableName()}.openCreateForm()">+ Добавить</button>
         </div>
       </div>
       <div class="empty-state">

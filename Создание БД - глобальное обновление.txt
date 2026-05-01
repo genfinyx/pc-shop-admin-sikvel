@@ -87,7 +87,8 @@ CREATE TABLE Order_Item (
     order_id INT,
     product_id INT,
     FOREIGN KEY (order_id) REFERENCES `Order`(order_id) ON DELETE CASCADE,
-    FOREIGN KEY (product_id) REFERENCES Product(product_id) ON DELETE RESTRICT
+    FOREIGN KEY (product_id) REFERENCES Product(product_id) ON DELETE RESTRICT,
+    UNIQUE KEY unique_product_per_order (order_id, product_id)
 );
 
 -- Корзина

@@ -2,6 +2,7 @@ package main
 
 import (
     "context"
+    "embed"
     "crypto/sha256"
     "database/sql"
     "fmt"
@@ -10,11 +11,16 @@ import (
     "time"
     "strconv"
     "os"
+    "path/filepath"
+    "sync"
     "encoding/base64"
 
+    "github.com/signintech/gopdf"
     "github.com/xuri/excelize/v2"
     _ "github.com/go-sql-driver/mysql"
 )
+
+var fontData embed.FS
 
 type App struct {
 	ctx context.Context
@@ -903,6 +909,22 @@ func (a *App) GetOrder(id int) (map[string]interface{}, error) {
         "order_date":      getTime(orderDate),
         "notes":           getString(notes),
     }, nil
+}
+
+func (a *App) GetOrderTotal(orderID int) (float64, error) {
+    if a.db == nil {
+        return 0, fmt.Errorf("database not connected")
+    }
+    var total float64
+    err := a.db.QueryRow(`
+        SELECT COALESCE(SUM(oi.quantity * oi.price), 0)
+        FROM order_item oi
+        WHERE oi.order_id = ?
+    `, orderID).Scan(&total)
+    if err != nil {
+        return 0, err
+    }
+    return total, nil
 }
 
 // CreateOrder создаёт новый заказ
@@ -3225,7 +3247,8 @@ func (a *App) GetReportData(reportType string, startDate, endDate string) ([]map
         `, startDate, endDate)
     case "receipts":
         rows, err = a.db.Query(`
-            SELECT DATE(r.receipt_date) as receipt_date,
+            SELECT r.receipt_id,
+                   DATE(r.receipt_date) as receipt_date,
                    r.receipt_number,
                    COALESCE(o.order_number, '') as order_number,
                    CONCAT(COALESCE(u.last_name, ''), ' ', COALESCE(u.first_name, '')) as customer_name,
@@ -3274,4 +3297,216 @@ func (a *App) GetReportData(reportType string, startDate, endDate string) ([]map
         result = append(result, row)
     }
     return result, nil
+}
+
+// GenerateReceiptPDF создаёт PDF-файл чека по его ID
+func (a *App) GenerateReceiptPDF(receiptID int) (string, error) {
+    if a.db == nil {
+        return "", fmt.Errorf("database not connected")
+    }
+
+    // --- Получение данных (как было) ---
+    var receiptNumber string
+    var receiptDate time.Time
+    var orderID int
+    var totalAmount float64
+    var paymentMethod string
+    err := a.db.QueryRow(`
+        SELECT receipt_number, receipt_date, order_id, total_amount, COALESCE(payment_method, '')
+        FROM receipt WHERE receipt_id = ?
+    `, receiptID).Scan(&receiptNumber, &receiptDate, &orderID, &totalAmount, &paymentMethod)
+    if err != nil {
+        return "", fmt.Errorf("чек не найден: %v", err)
+    }
+
+    var orderNumber string
+    var customerName string
+    err = a.db.QueryRow(`
+        SELECT o.order_number, COALESCE(CONCAT(u.last_name, ' ', u.first_name), 'Гость')
+        FROM `+"`Order`"+` o
+        LEFT JOIN user u ON u.idUser = o.user_id
+        WHERE o.order_id = ?
+    `, orderID).Scan(&orderNumber, &customerName)
+    if err != nil {
+        orderNumber = "Неизвестно"
+        customerName = "Гость"
+    }
+
+    rows, err := a.db.Query(`
+        SELECT p.name, oi.quantity, oi.price
+        FROM order_item oi
+        LEFT JOIN product p ON p.product_id = oi.product_id
+        WHERE oi.order_id = ?
+    `, orderID)
+    if err != nil {
+        return "", err
+    }
+    defer rows.Close()
+
+    // --- PDF ---
+    pdf := gopdf.GoPdf{}
+    pdf.Start(gopdf.Config{PageSize: gopdf.Rect{W: 595.28, H: 841.89}})
+    pdf.AddPage()
+
+    // Шрифт Arial (работает на всех Windows)
+    if err := pdf.AddTTFFont("Arial", "C:/Windows/Fonts/arial.ttf"); err != nil {
+        return "", fmt.Errorf("шрифт не загружен: %v", err)
+    }
+    pdf.SetFont("Arial", "", 10)
+
+    y := 30.0 // начальная вертикальная позиция
+
+    // Заголовок
+    pdf.SetFontSize(16)
+    pdf.SetX(50)
+    pdf.Cell(nil, "ЧЕК")
+    y += 20
+    pdf.SetY(y)
+
+    pdf.SetFontSize(10)
+    // Магазин
+    pdf.SetX(50)
+    pdf.Cell(nil, "Магазин: PC Shop")
+    y += 12
+    pdf.SetY(y)
+
+    pdf.SetX(50)
+    pdf.Cell(nil, "ИНН: 7701234567")
+    y += 12
+    pdf.SetY(y)
+
+    pdf.SetX(50)
+    pdf.Cell(nil, "Адрес: г. Калининград, ул. Примерная, д. 1")
+    y += 20
+    pdf.SetY(y)
+
+    // Реквизиты
+    pdf.SetX(50)
+    pdf.Cell(nil, fmt.Sprintf("Номер чека: %s", receiptNumber))
+    y += 12
+    pdf.SetY(y)
+    pdf.SetX(50)
+    pdf.Cell(nil, fmt.Sprintf("Дата: %s", receiptDate.Format("02.01.2006 15:04")))
+    y += 12
+    pdf.SetY(y)
+    pdf.SetX(50)
+    pdf.Cell(nil, fmt.Sprintf("Заказ: %s", orderNumber))
+    y += 12
+    pdf.SetY(y)
+    pdf.SetX(50)
+    pdf.Cell(nil, fmt.Sprintf("Клиент: %s", customerName))
+    y += 20
+    pdf.SetY(y)
+
+    // Таблица: заголовки
+    pdf.SetFont("Arial", "B", 10)
+    pdf.SetX(50)
+    pdf.Cell(&gopdf.Rect{W: 250, H: 15}, "Наименование")
+    pdf.SetX(300)
+    pdf.Cell(&gopdf.Rect{W: 50, H: 15}, "Кол-во")
+    pdf.SetX(350)
+    pdf.Cell(&gopdf.Rect{W: 70, H: 15}, "Цена")
+    pdf.SetX(420)
+    pdf.Cell(&gopdf.Rect{W: 70, H: 15}, "Сумма")
+    y += 20
+    pdf.SetY(y)
+
+    // Данные
+    pdf.SetFont("Arial", "", 10)
+    var grandTotal float64
+    for rows.Next() {
+        var productName string
+        var quantity int
+        var price float64
+        if err := rows.Scan(&productName, &quantity, &price); err != nil {
+            continue
+        }
+        sum := float64(quantity) * price
+        grandTotal += sum
+
+        pdf.SetX(50)
+        pdf.Cell(&gopdf.Rect{W: 250, H: 15}, truncateString(productName, 30))
+        pdf.SetX(300)
+        pdf.Cell(&gopdf.Rect{W: 50, H: 15}, strconv.Itoa(quantity))
+        pdf.SetX(350)
+        pdf.Cell(&gopdf.Rect{W: 70, H: 15}, fmt.Sprintf("%.2f", price))
+        pdf.SetX(420)
+        pdf.Cell(&gopdf.Rect{W: 70, H: 15}, fmt.Sprintf("%.2f", sum))
+        y += 15
+        pdf.SetY(y)
+    }
+
+    // Итог
+    pdf.SetFont("Arial", "B", 10)
+    pdf.SetX(350)
+    pdf.Cell(&gopdf.Rect{W: 70, H: 15}, "ИТОГО:")
+    pdf.SetX(420)
+    pdf.Cell(&gopdf.Rect{W: 70, H: 15}, fmt.Sprintf("%.2f", grandTotal))
+    y += 20
+    pdf.SetY(y)
+
+    // Оплата и подпись
+    paymentText := map[string]string{
+        "cash":   "Наличными",
+        "card":   "Банковской картой",
+        "online": "Онлайн",
+    }[paymentMethod]
+    if paymentText == "" {
+        paymentText = paymentMethod
+    }
+    pdf.SetX(50)
+    pdf.Cell(nil, fmt.Sprintf("Оплачено: %s", paymentText))
+    y += 15
+    pdf.SetY(y)
+
+    pdf.SetX(50)
+    pdf.Cell(nil, "Спасибо за покупку!")
+
+    // Сохраняем
+    filename := fmt.Sprintf("receipt_%d.pdf", receiptID)
+    tmpFile, err := os.CreateTemp("", filename)
+    if err != nil {
+        return "", err
+    }
+    tmpPath := tmpFile.Name()
+    tmpFile.Close()
+
+    if err := pdf.WritePdf(tmpPath); err != nil {
+        return "", err
+    }
+    return tmpPath, nil
+}
+
+func truncateString(s string, maxLen int) string {
+    runes := []rune(s)
+    if len(runes) <= maxLen {
+        return s
+    }
+    return string(runes[:maxLen-3]) + "..."
+}
+
+var (
+    fontOnce sync.Once
+    fontPath string
+    fontErr  error
+)
+
+func getFontPath() (string, error) {
+    exe, err := os.Executable()
+    if err != nil {
+        return "", err
+    }
+    exeDir := filepath.Dir(exe)
+
+    candidates := []string{
+        filepath.Join(exeDir, "frontend", "public", "fonts", "LiberationSerif-Regular.ttf"),
+        filepath.Join(exeDir, "..", "frontend", "public", "fonts", "LiberationSerif-Regular.ttf"),
+        "frontend/public/fonts/LiberationSerif-Regular.ttf", // для wails dev из корня
+    }
+    for _, p := range candidates {
+        if _, err := os.Stat(p); err == nil {
+            return p, nil
+        }
+    }
+    return "", fmt.Errorf("шрифт не найден")
 }

@@ -61,6 +61,8 @@ export function ExportInvoiceWithTemplate(arg1:string,arg2:string,arg3:string):P
 
 export function GenerateOrderNumber():Promise<string>;
 
+export function GenerateReceiptPDF(arg1:number):Promise<string>;
+
 export function GetCartItem(arg1:number):Promise<Record<string, any>>;
 
 export function GetCategories():Promise<Array<Record<string, any>>>;
@@ -78,6 +80,8 @@ export function GetInvoiceOut(arg1:number):Promise<Record<string, any>>;
 export function GetOrder(arg1:number):Promise<Record<string, any>>;
 
 export function GetOrderItem(arg1:number):Promise<Record<string, any>>;
+
+export function GetOrderTotal(arg1:number):Promise<number>;
 
 export function GetProduct(arg1:number):Promise<Record<string, any>>;
 

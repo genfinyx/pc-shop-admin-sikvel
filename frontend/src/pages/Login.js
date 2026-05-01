@@ -1,5 +1,4 @@
 import '../styles/style.css';
-import '../styles/login.css';
 import { Session } from '../services/Session.js';
 
 export function LoginPage() {

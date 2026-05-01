@@ -1,5 +1,4 @@
 import './styles/style.css';
-import './styles/loading.css';
 import { startLoading } from './loading.js';
 import { LoginPage, initLogin } from './pages/Login.js';
 import { AdminPage } from './pages/AdminPage.js';

@@ -122,6 +122,10 @@ export function GenerateOrderNumber() {
   return window['go']['main']['App']['GenerateOrderNumber']();
 }
 
+export function GenerateReceiptPDF(arg1) {
+  return window['go']['main']['App']['GenerateReceiptPDF'](arg1);
+}
+
 export function GetCartItem(arg1) {
   return window['go']['main']['App']['GetCartItem'](arg1);
 }
@@ -156,6 +160,10 @@ export function GetOrder(arg1) {
 
 export function GetOrderItem(arg1) {
   return window['go']['main']['App']['GetOrderItem'](arg1);
+}
+
+export function GetOrderTotal(arg1) {
+  return window['go']['main']['App']['GetOrderTotal'](arg1);
 }
 
 export function GetProduct(arg1) {

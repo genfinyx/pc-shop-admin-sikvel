@@ -144,10 +144,19 @@ export class ReceiptTable extends BaseTable {
     const input = document.getElementById('orderSearchInput');
     const hiddenInput = document.getElementById('selectedOrderId');
     const dropdown = document.getElementById('orderDropdown');
+    const totalInput = document.getElementById('totalAmountInput');
 
     if (input) input.value = displayName;
     if (hiddenInput) hiddenInput.value = orderId;
     if (dropdown) dropdown.style.display = 'none';
+
+    if (totalInput && orderId) {
+      window.go.main.App.GetOrderTotal(orderId).then(total => {
+        totalInput.value = total.toFixed(2);
+      }).catch(err => {
+        console.error('Ошибка получения суммы заказа:', err);
+      });
+    }
   }
 
   // ========== ФУНКЦИИ ДАТЫ ==========
@@ -366,7 +375,7 @@ export class ReceiptTable extends BaseTable {
                   
                   <div class="col-md-6 mb-3">
                     <label class="form-label">Сумма <span class="text-danger">*</span></label>
-                    <input type="number" name="total_amount" class="form-control" value="${this.formData.total_amount || ''}" step="0.01" min="0" required>
+                    <input type="number" name="total_amount" id="totalAmountInput" class="form-control" value="${this.formData.total_amount || ''}" step="0.01" min="0" required>
                     <span class="text-secondary">₽</span>
                   </div>
                   
