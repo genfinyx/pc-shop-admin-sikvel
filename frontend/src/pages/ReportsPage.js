@@ -1,5 +1,6 @@
 import '../styles/style.css';
 import { Session } from '../services/Session.js';
+import { Toast } from '../services/Toast.js';
 
 // Функции для дат
 function getDefaultDateStart() {
@@ -123,7 +124,7 @@ function renderIncomingInvoices() {
           </thead>
           <tbody>
             ${data.length === 0 ? `
-              <tr><td colspan="7" class="text-center text-secondary py-4">Нет данных за выбранный период</td></tr>
+              <tr><td colspan="7" class="text-center text-secondary py-4">Нет данных за выбранный период</td</tr>
             ` : data.map(item => `
               <tr>
                 <td>${formatDate(item.invoice_date)}</td>
@@ -141,7 +142,7 @@ function renderIncomingInvoices() {
               <tr class="total-row">
                 <td colspan="4" class="text-end"><strong>Итого:</strong></td>
                 <td class="text-end"><strong>${totalQuantity}</strong></td>
-                <td class="text-end"></td>
+                <td class="text-end"> </td>
                 <td class="text-end"><strong>${formatMoney(totalAmount)}</strong></td>
               </tr>
             </tfoot>
@@ -181,7 +182,7 @@ function renderOutgoingInvoices() {
           </thead>
           <tbody>
             ${data.length === 0 ? `
-              <tr><td colspan="7" class="text-center text-secondary py-4">Нет данных за выбранный период</td></tr>
+              <tr><td colspan="7" class="text-center text-secondary py-4">Нет данных за выбранный период</td</tr>
             ` : data.map(item => `
               <tr>
                 <td>${formatDate(item.invoice_date)}</td>
@@ -199,7 +200,7 @@ function renderOutgoingInvoices() {
               <tr class="total-row">
                 <td colspan="4" class="text-end"><strong>Итого:</strong></td>
                 <td class="text-end"><strong>${totalQuantity}</strong></td>
-                <td class="text-end"></td>
+                <td class="text-end"> </td>
                 <td class="text-end"><strong>${formatMoney(totalAmount)}</strong></td>
               </tr>
             </tfoot>
@@ -234,7 +235,7 @@ function renderReceipts() {
           </thead>
           <tbody>
             ${data.length === 0 ? `
-              <tr><td colspan="6" class="text-center text-secondary py-4">Нет данных за выбранный период</td></tr>
+              <tr><td colspan="6" class="text-center text-secondary py-4">Нет данных за выбранный период</td</tr>
             ` : data.map(item => `
               <tr>
                 <td>${formatDate(item.receipt_date)}</td>
@@ -255,7 +256,7 @@ function renderReceipts() {
               <tr class="total-row">
                 <td colspan="4" class="text-end"><strong>Итого:</strong></td>
                 <td class="text-end"><strong>${formatMoney(totalAmount)}</strong></td>
-                <td></td>
+                <td class="text-end"> </td>
               </tr>
             </tfoot>
           ` : ''}
@@ -281,13 +282,25 @@ window.downloadExcel = async (type) => {
   const startDate = document.getElementById('dateStart').value;
   const endDate = document.getElementById('dateEnd').value;
   if (!startDate || !endDate) {
-    alert('Выберите период дат');
+    Toast.error('Выберите период дат');
     return;
   }
+
+  // Проверяем, есть ли данные в текущей вкладке
+  let hasData = true;
+  if (type === 'in' && (!reportData.in || reportData.in.length === 0)) hasData = false;
+  if (type === 'out' && (!reportData.out || reportData.out.length === 0)) hasData = false;
+  if (type === 'receipts' && (!reportData.receipts || reportData.receipts.length === 0)) hasData = false;
+
+  if (!hasData) {
+    Toast.error('Нет данных за выбранный период. Скачивание невозможно.');
+    return;
+  }
+
   try {
     const filepath = await window.go.main.App.ExportInvoiceWithTemplate(type, startDate, endDate);
     if (!filepath) {
-      alert('Нет данных за выбранный период');
+      Toast.error('Нет данных за выбранный период');
       return;
     }
     const base64 = await window.go.main.App.ReadFileBase64(filepath);
@@ -305,9 +318,10 @@ window.downloadExcel = async (type) => {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+    Toast.success('Файл успешно скачан');
   } catch (error) {
     console.error('Ошибка скачивания:', error);
-    alert('Ошибка: ' + error.message);
+    Toast.error('Ошибка: ' + error.message);
   }
 };
 
@@ -315,7 +329,7 @@ window.printReceipt = async (id) => {
   try {
     const filepath = await window.go.main.App.GenerateReceiptPDF(id);
     if (!filepath) {
-      alert('Не удалось сгенерировать чек');
+      Toast.error('Не удалось сгенерировать чек');
       return;
     }
     const base64 = await window.go.main.App.ReadFileBase64(filepath);
@@ -333,23 +347,32 @@ window.printReceipt = async (id) => {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+    Toast.success('Чек успешно скачан');
   } catch (error) {
     console.error('Ошибка печати чека:', error);
-    alert('Ошибка: ' + error.message);
+    Toast.error('Ошибка: ' + error.message);
   }
 };
 
 window.changeReportTab = async (tab) => {
   currentTab = tab;
-  await loadReportData();
-  document.getElementById('app').innerHTML = ReportsPage();
+  try {
+    await loadReportData();
+    document.getElementById('app').innerHTML = ReportsPage();
+  } catch (error) {
+    Toast.error('Ошибка загрузки данных: ' + error.message);
+  }
 };
 
 window.applyDateFilter = async () => {
   dateStart = document.getElementById('dateStart').value;
   dateEnd = document.getElementById('dateEnd').value;
-  await loadReportData();
-  document.getElementById('app').innerHTML = ReportsPage();
+  try {
+    await loadReportData();
+    document.getElementById('app').innerHTML = ReportsPage();
+  } catch (error) {
+    Toast.error('Ошибка применения фильтра: ' + error.message);
+  }
 };
 
 window.goToAdmin = () => {
@@ -372,10 +395,14 @@ async function loadReportData() {
     reportData.receipts = receiptsData || [];
   } catch (error) {
     console.error('Ошибка загрузки отчётов:', error);
+    Toast.error('Ошибка загрузки отчётов: ' + error.message);
+    throw error; // пробросим дальше для обработки в вызывающих функциях
   }
 }
 
 // Загружаем данные при старте
 setTimeout(() => {
-  loadReportData();
+  loadReportData().catch(err => {
+    Toast.error('Не удалось загрузить начальные данные отчётов');
+  });
 }, 100);

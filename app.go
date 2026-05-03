@@ -7,13 +7,12 @@ import (
     "database/sql"
     "fmt"
     "strings"
-    "math/rand"
     "time"
     "strconv"
     "os"
-    "path/filepath"
     "sync"
     "encoding/base64"
+    "math/rand"
 
     "github.com/signintech/gopdf"
     "github.com/xuri/excelize/v2"
@@ -2987,42 +2986,96 @@ func (a *App) ExportInvoiceWithTemplate(reportType string, startDate, endDate st
         return "", fmt.Errorf("database not connected")
     }
 
-    var templatePath string
-    switch reportType {
-    case "in":
-        templatePath = "templates/invoice_in.xlsx"
-    case "out":
-        templatePath = "templates/invoice_out.xlsx"
-    default:
-        return "", fmt.Errorf("unknown report type")
+    f := excelize.NewFile()
+    sheetName := "Отчёт"
+    f.SetSheetName("Sheet1", sheetName)
+
+    // ========== 1. Шапка документа ==========
+    now := time.Now()
+    docNumber := fmt.Sprintf("INV-%s-%03d", now.Format("20060102"), rand.Intn(999)+1)
+
+    f.MergeCell(sheetName, "C1", "D1")
+    f.SetCellValue(sheetName, "C1", "Номер документа:")
+    f.MergeCell(sheetName, "E1", "F1")
+    f.SetCellValue(sheetName, "E1", docNumber)
+    f.MergeCell(sheetName, "C2", "D2")
+    f.SetCellValue(sheetName, "C2", "Дата:")
+    f.MergeCell(sheetName, "E2", "F2")
+    f.SetCellValue(sheetName, "E2", now.Format("02.01.2006"))
+
+    titleStyle, _ := f.NewStyle(&excelize.Style{
+        Font:      &excelize.Font{Bold: true},
+        Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
+    })
+    f.SetCellStyle(sheetName, "C1", "F2", titleStyle)
+
+    // ========== 2. Заголовки таблицы (строка 4) ==========
+    headers := []string{"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O"}
+    labels := []string{
+        "№ п/п", "Товар", "Код товара", "Ед. изм.", "Код ОКЕИ", "Вид упаковки",
+        "Кол-во в одном месте", "Кол-во мест, штук", "Масса брутто", "Масса нетто",
+        "Цена", "Сумма без НДС", "Ставка НДС", "Сумма НДС", "Сумма с НДС",
     }
 
-    // Копируем шаблон
-    data, err := os.ReadFile(templatePath)
-    if err != nil {
-        return "", fmt.Errorf("не удалось прочитать шаблон: %v", err)
-    }
-    tmp, err := os.CreateTemp("", "report_*.xlsx")
-    if err != nil {
-        return "", err
-    }
-    tmpPath := tmp.Name()
-    tmp.Close()
-    if err := os.WriteFile(tmpPath, data, 0644); err != nil {
-        return "", err
+    headerStyle, _ := f.NewStyle(&excelize.Style{
+        Font:      &excelize.Font{Bold: true},
+        Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center", WrapText: true},
+        Border: []excelize.Border{
+            {Type: "left", Color: "000000", Style: 1},
+            {Type: "top", Color: "000000", Style: 1},
+            {Type: "bottom", Color: "000000", Style: 1},
+            {Type: "right", Color: "000000", Style: 1},
+        },
+    })
+
+    for i, col := range headers {
+        cell := fmt.Sprintf("%s4", col)
+        f.SetCellValue(sheetName, cell, labels[i])
+        f.SetCellStyle(sheetName, cell, cell, headerStyle)
     }
 
-    f, err := excelize.OpenFile(tmpPath)
-    if err != nil {
-        return "", fmt.Errorf("ошибка открытия файла: %v", err)
-    }
-    defer f.Close()
+    // ========== 3. Стили для строк данных ==========
+    // A-E: левая, верхняя, нижняя (правой нет)
+    styleAE, _ := f.NewStyle(&excelize.Style{
+        Border: []excelize.Border{
+            {Type: "left", Color: "000000", Style: 1},
+            {Type: "top", Color: "000000", Style: 1},
+            {Type: "bottom", Color: "000000", Style: 1},
+        },
+        Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
+    })
+    // F: полные границы (чтобы была правая)
+    styleF, _ := f.NewStyle(&excelize.Style{
+        Border: []excelize.Border{
+            {Type: "left", Color: "000000", Style: 1},
+            {Type: "top", Color: "000000", Style: 1},
+            {Type: "bottom", Color: "000000", Style: 1},
+            {Type: "right", Color: "000000", Style: 1},
+        },
+        Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
+    })
+    // G: верхняя + правая (левой и нижней нет)
+    styleG, _ := f.NewStyle(&excelize.Style{
+        Border: []excelize.Border{
+            {Type: "top", Color: "000000", Style: 1},
+            {Type: "right", Color: "000000", Style: 1},
+        },
+        Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
+    })
+    // H-O: полные границы
+    styleHO, _ := f.NewStyle(&excelize.Style{
+        Border: []excelize.Border{
+            {Type: "left", Color: "000000", Style: 1},
+            {Type: "top", Color: "000000", Style: 1},
+            {Type: "bottom", Color: "000000", Style: 1},
+            {Type: "right", Color: "000000", Style: 1},
+        },
+        Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
+    })
 
-    sheetName := "Лист2"
-    startRow := 31
-    currentRow := startRow
-
+    // ========== 4. Получение данных из БД ==========
     var rows *sql.Rows
+    var err error
     switch reportType {
     case "in":
         rows, err = a.db.Query(`
@@ -3046,19 +3099,6 @@ func (a *App) ExportInvoiceWithTemplate(reportType string, startDate, endDate st
     }
     defer rows.Close()
 
-    styleID := copyRowStyle(f, sheetName, startRow)
-    if styleID == 0 {
-        styleID, _ = f.NewStyle(&excelize.Style{
-            Border: []excelize.Border{
-                {Type: "left", Color: "000000", Style: 1},
-                {Type: "top", Color: "000000", Style: 1},
-                {Type: "bottom", Color: "000000", Style: 1},
-                {Type: "right", Color: "000000", Style: 1},
-            },
-            Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
-        })
-    }
-
     idx := 1
     totalQty := 0
     totalGross := 0.0
@@ -3066,6 +3106,8 @@ func (a *App) ExportInvoiceWithTemplate(reportType string, startDate, endDate st
     totalAmount := 0.0
     totalVAT := 0.0
     totalWithVAT := 0.0
+
+    row := 5
 
     for rows.Next() {
         var productId int
@@ -3088,80 +3130,96 @@ func (a *App) ExportInvoiceWithTemplate(reportType string, startDate, endDate st
         totalVAT += vat
         totalWithVAT += sum + vat
 
-        now := time.Now()
-        dateStr := now.Format("20060102")
-        randomNum := rand.Intn(999) + 1
-        docNumber := fmt.Sprintf("INV-%s-%03d", dateStr, randomNum)
-        f.SetCellValue(sheetName, "I26", docNumber)
-        f.SetCellValue(sheetName, "K26", now.Format("02.01.2006"))
+        // Заполняем ячейки
+        f.SetCellValue(sheetName, fmt.Sprintf("A%d", row), idx)
+        f.SetCellValue(sheetName, fmt.Sprintf("B%d", row), product)
+        f.SetCellValue(sheetName, fmt.Sprintf("C%d", row), productId)
+        f.SetCellValue(sheetName, fmt.Sprintf("D%d", row), "шт")
+        f.SetCellValue(sheetName, fmt.Sprintf("E%d", row), "796")
+        f.SetCellValue(sheetName, fmt.Sprintf("F%d", row), "Коробка")
+        f.SetCellValue(sheetName, fmt.Sprintf("G%d", row), 1)
+        f.SetCellValue(sheetName, fmt.Sprintf("H%d", row), qty)
+        f.SetCellValue(sheetName, fmt.Sprintf("I%d", row), gross)
+        f.SetCellValue(sheetName, fmt.Sprintf("J%d", row), net)
+        f.SetCellValue(sheetName, fmt.Sprintf("K%d", row), price)
+        f.SetCellValue(sheetName, fmt.Sprintf("L%d", row), sum)
+        f.SetCellValue(sheetName, fmt.Sprintf("M%d", row), "20%")
+        f.SetCellValue(sheetName, fmt.Sprintf("N%d", row), vat)
+        f.SetCellValue(sheetName, fmt.Sprintf("O%d", row), sum+vat)
 
-        setCellWithStyle(f, sheetName, fmt.Sprintf("A%d", currentRow), idx, styleID)
-        setCellWithStyle(f, sheetName, fmt.Sprintf("B%d", currentRow), product, styleID)
-        setCellWithStyle(f, sheetName, fmt.Sprintf("C%d", currentRow), productId, styleID)
-        setCellWithStyle(f, sheetName, fmt.Sprintf("D%d", currentRow), "шт", styleID)
-        setCellWithStyle(f, sheetName, fmt.Sprintf("E%d", currentRow), "796", styleID)
-        setCellWithStyle(f, sheetName, fmt.Sprintf("F%d", currentRow), "Коробка", styleID)
-        setCellWithStyle(f, sheetName, fmt.Sprintf("G%d", currentRow), 1, styleID)
-        setCellWithStyle(f, sheetName, fmt.Sprintf("H%d", currentRow), qty, styleID)
-        setCellWithStyle(f, sheetName, fmt.Sprintf("I%d", currentRow), gross, styleID)
-        setCellWithStyle(f, sheetName, fmt.Sprintf("J%d", currentRow), net, styleID)
-        setCellWithStyle(f, sheetName, fmt.Sprintf("K%d", currentRow), price, styleID)
-        setCellWithStyle(f, sheetName, fmt.Sprintf("L%d", currentRow), sum, styleID)
-        setCellWithStyle(f, sheetName, fmt.Sprintf("M%d", currentRow), "20%", styleID)
-        setCellWithStyle(f, sheetName, fmt.Sprintf("N%d", currentRow), vat, styleID)
-        setCellWithStyle(f, sheetName, fmt.Sprintf("O%d", currentRow), sum+vat, styleID)
+        // Применяем стили
+        for _, col := range []string{"A", "B", "C", "D", "E"} {
+            cell := fmt.Sprintf("%s%d", col, row)
+            f.SetCellStyle(sheetName, cell, cell, styleAE)
+        }
+        // F
+        cellF := fmt.Sprintf("F%d", row)
+        f.SetCellStyle(sheetName, cellF, cellF, styleF)
+        // G
+        cellG := fmt.Sprintf("G%d", row)
+        f.SetCellStyle(sheetName, cellG, cellG, styleG)
+        // H-O
+        for _, col := range []string{"H", "I", "J", "K", "L", "M", "N", "O"} {
+            cell := fmt.Sprintf("%s%d", col, row)
+            f.SetCellStyle(sheetName, cell, cell, styleHO)
+        }
 
         idx++
-        currentRow++
+        row++
     }
 
     if idx == 1 {
         return "", fmt.Errorf("нет данных за выбранный период")
     }
 
-    totalRow := currentRow
-    setCellWithStyle(f, sheetName, fmt.Sprintf("G%d", totalRow), "Итого", styleID)
-    setCellWithStyle(f, sheetName, fmt.Sprintf("H%d", totalRow), totalQty, styleID)
-    setCellWithStyle(f, sheetName, fmt.Sprintf("I%d", totalRow), totalGross, styleID)
-    setCellWithStyle(f, sheetName, fmt.Sprintf("J%d", totalRow), totalNet, styleID)
-    setCellWithStyle(f, sheetName, fmt.Sprintf("K%d", totalRow), "X", styleID)
-    setCellWithStyle(f, sheetName, fmt.Sprintf("L%d", totalRow), totalAmount, styleID)
-    setCellWithStyle(f, sheetName, fmt.Sprintf("M%d", totalRow), "X", styleID)
-    setCellWithStyle(f, sheetName, fmt.Sprintf("N%d", totalRow), totalVAT, styleID)
-    setCellWithStyle(f, sheetName, fmt.Sprintf("O%d", totalRow), totalWithVAT, styleID)
+    // ========== 5. Строка Итого ==========
+    totalRow := row
+    f.SetCellValue(sheetName, fmt.Sprintf("G%d", totalRow), "Итого")
+    f.SetCellValue(sheetName, fmt.Sprintf("H%d", totalRow), totalQty)
+    f.SetCellValue(sheetName, fmt.Sprintf("I%d", totalRow), totalGross)
+    f.SetCellValue(sheetName, fmt.Sprintf("J%d", totalRow), totalNet)
+    f.SetCellValue(sheetName, fmt.Sprintf("K%d", totalRow), "X")
+    f.SetCellValue(sheetName, fmt.Sprintf("L%d", totalRow), totalAmount)
+    f.SetCellValue(sheetName, fmt.Sprintf("M%d", totalRow), "X")
+    f.SetCellValue(sheetName, fmt.Sprintf("N%d", totalRow), totalVAT)
+    f.SetCellValue(sheetName, fmt.Sprintf("O%d", totalRow), totalWithVAT)
 
-    // ===== НОВЫЙ БЛОК: убираем лишние границы и задаём шрифт для G =====
-    // Стиль только с верхней границей (для A-F)
-    styleTopOnly, _ := f.NewStyle(&excelize.Style{
+    // Стиль для A-F в итоговой строке: только верхняя граница (без левой, правой, нижней)
+    styleTotalAF, _ := f.NewStyle(&excelize.Style{
         Border: []excelize.Border{
             {Type: "top", Color: "000000", Style: 1},
         },
         Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
     })
-    // Стиль с верхней и правой границей + шрифт Times New Roman 9pt (для G)
-    styleTopRight, _ := f.NewStyle(&excelize.Style{
-        Border: []excelize.Border{
-            {Type: "top", Color: "000000", Style: 1},
-            {Type: "right", Color: "000000", Style: 1},
-        },
-        Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
-        Font: &excelize.Font{
-            Family: "Times New Roman",
-            Size:   9,
-        },
-    })
+    // Для G: верхняя + правая (как в обычных строках)
+    // Для H-O: полные границы
 
-    // Применяем стили
-    for col := 'A'; col <= 'F'; col++ {
-        cell := fmt.Sprintf("%c%d", col, totalRow)
-        f.SetCellValue(sheetName, cell, "")          // очищаем значение
-        f.SetCellStyle(sheetName, cell, cell, styleTopOnly)
+    for _, col := range []string{"A", "B", "C", "D", "E", "F"} {
+        cell := fmt.Sprintf("%s%d", col, totalRow)
+        f.SetCellStyle(sheetName, cell, cell, styleTotalAF)
     }
-    // Применяем к G: стиль с верхней+правой + шрифт
-    f.SetCellStyle(sheetName, fmt.Sprintf("G%d", totalRow), fmt.Sprintf("G%d", totalRow), styleTopRight)
+    f.SetCellStyle(sheetName, fmt.Sprintf("G%d", totalRow), fmt.Sprintf("G%d", totalRow), styleG)
+    for _, col := range []string{"H", "I", "J", "K", "L", "M", "N", "O"} {
+        cell := fmt.Sprintf("%s%d", col, totalRow)
+        f.SetCellStyle(sheetName, cell, cell, styleHO)
+    }
 
-    // Сохраняем
-    if err := f.Save(); err != nil {
+    // ========== 6. Автоширина колонок ==========
+    colWidths := map[string]float64{
+        "A": 8, "B": 40, "C": 10, "D": 8, "E": 8, "F": 12,
+        "G": 10, "H": 10, "I": 12, "J": 12, "K": 12, "L": 15, "M": 10, "N": 12, "O": 15,
+    }
+    for col, width := range colWidths {
+        f.SetColWidth(sheetName, col, col, width)
+    }
+
+    tmp, err := os.CreateTemp("", "report_*.xlsx")
+    if err != nil {
+        return "", err
+    }
+    tmpPath := tmp.Name()
+    tmp.Close()
+    if err := f.SaveAs(tmpPath); err != nil {
         return "", err
     }
 
@@ -3490,23 +3548,3 @@ var (
     fontPath string
     fontErr  error
 )
-
-func getFontPath() (string, error) {
-    exe, err := os.Executable()
-    if err != nil {
-        return "", err
-    }
-    exeDir := filepath.Dir(exe)
-
-    candidates := []string{
-        filepath.Join(exeDir, "frontend", "public", "fonts", "LiberationSerif-Regular.ttf"),
-        filepath.Join(exeDir, "..", "frontend", "public", "fonts", "LiberationSerif-Regular.ttf"),
-        "frontend/public/fonts/LiberationSerif-Regular.ttf", // для wails dev из корня
-    }
-    for _, p := range candidates {
-        if _, err := os.Stat(p); err == nil {
-            return p, nil
-        }
-    }
-    return "", fmt.Errorf("шрифт не найден")
-}
