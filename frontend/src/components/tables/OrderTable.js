@@ -1,18 +1,18 @@
-import { BaseTable } from './BaseTable.js';
-import { Toast } from '../../services/Toast.js';
+import { BaseTable } from './BaseTable.js'
+import { Toast } from '../../services/Toast.js'
 
 export class OrderTable extends BaseTable {
   constructor() {
-    super();
-    this.editId = null;
-    this.formData = {};
-    this.rowHeight = 53;
-    this.users = [];
-    this.data = { columns: [], rows: [], total: 0 };
+    super()
+    this.editId = null
+    this.formData = {}
+    this.rowHeight = 53
+    this.users = []
+    this.data = { columns: [], rows: [], total: 0 }
   }
 
   getTableName() {
-    return 'order';
+    return 'order'
   }
 
   getColumnNames() {
@@ -24,282 +24,302 @@ export class OrderTable extends BaseTable {
       payment_method: 'Способ оплаты',
       payment_status: 'Статус оплаты',
       order_date: 'Дата заказа',
-      notes: 'Примечания'
-    };
+      notes: 'Примечания',
+    }
   }
 
   async handleSearch(event) {
-    if (event) event.preventDefault();
-    const input = document.getElementById('searchInput');
-    this.currentSearch = input ? input.value : '';
-    this.currentPage = 1;
-    await this.load(this.currentPage, this.currentSearch);
-    const { renderTable } = await import('../TableContainer.js');
+    if (event) event.preventDefault()
+    const input = document.getElementById('searchInput')
+    this.currentSearch = input ? input.value : ''
+    this.currentPage = 1
+    await this.load(this.currentPage, this.currentSearch)
+    const { renderTable } = await import('../TableContainer.js')
     await renderTable('order', 'tableContainer', {
       onEdit: (table, id) => console.log('Edit', table, id),
-      onDelete: (table, id) => console.log('Delete', table, id)
-    });
+      onDelete: (table, id) => console.log('Delete', table, id),
+    })
   }
 
   async handleSearchClear() {
-    this.currentSearch = '';
-    this.currentPage = 1;
-    const input = document.getElementById('searchInput');
-    if (input) input.value = '';
-    await this.load(this.currentPage, this.currentSearch);
-    const { renderTable } = await import('../TableContainer.js');
+    this.currentSearch = ''
+    this.currentPage = 1
+    const input = document.getElementById('searchInput')
+    if (input) input.value = ''
+    await this.load(this.currentPage, this.currentSearch)
+    const { renderTable } = await import('../TableContainer.js')
     await renderTable('order', 'tableContainer', {
       onEdit: (table, id) => console.log('Edit', table, id),
-      onDelete: (table, id) => console.log('Delete', table, id)
-    });
+      onDelete: (table, id) => console.log('Delete', table, id),
+    })
   }
 
   async load(page = 1, search = '') {
-    this.currentPage = page;
-    this.currentSearch = search;
-    await this.loadData('order', page, search);
-    await this.loadUsers();
+    this.currentPage = page
+    this.currentSearch = search
+    await this.loadData('order', page, search)
+    await this.loadUsers()
   }
 
   async loadData(table, page, search) {
     try {
-      const result = await window.go.main.App.GetTableData(table, page, search, this.perPage);
-      this.data = result;
-      return result;
+      const result = await window.go.main.App.GetTableData(
+        table,
+        page,
+        search,
+        this.perPage,
+      )
+      this.data = result
+      return result
     } catch (error) {
-      Toast.error('Ошибка загрузки данных: ' + error.message);
-      this.data = { columns: [], rows: [], total: 0 };
-      throw error;
+      Toast.error('Ошибка загрузки данных: ' + error.message)
+      this.data = { columns: [], rows: [], total: 0 }
+      throw error
     }
   }
 
   async loadUsers() {
     try {
-      const result = await window.go.main.App.GetTableData('user', 1, '', 1000);
-      this.users = result.rows || [];
+      const result = await window.go.main.App.GetTableData('user', 1, '', 1000)
+      this.users = result.rows || []
     } catch (error) {
-      console.error('Ошибка загрузки пользователей:', error);
-      this.users = [];
+      console.error('Ошибка загрузки пользователей:', error)
+      this.users = []
     }
   }
 
   async changePage(page) {
-    this.currentPage = page;
-    await this.load(this.currentPage, this.currentSearch);
-    const { renderTable } = await import('../TableContainer.js');
+    this.currentPage = page
+    await this.load(this.currentPage, this.currentSearch)
+    const { renderTable } = await import('../TableContainer.js')
     await renderTable('order', 'tableContainer', {
       onEdit: (table, id) => console.log('Edit', table, id),
-      onDelete: (table, id) => console.log('Delete', table, id)
-    });
+      onDelete: (table, id) => console.log('Delete', table, id),
+    })
   }
 
   getUserName(userId) {
-    if (!userId) return '<span class="text-secondary">—</span>';
-    const user = this.users.find(u => u.idUser == userId);
+    if (!userId) return '<span class="text-secondary">—</span>'
+    const user = this.users.find((u) => u.idUser == userId)
     if (user) {
-      return `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.username || String(userId);
+      return (
+        `${user.first_name || ''} ${user.last_name || ''}`.trim() ||
+        user.username ||
+        String(userId)
+      )
     }
-    return String(userId);
+    return String(userId)
   }
 
   getUserNameForInput(userId) {
-    if (!userId) return '';
-    const user = this.users.find(u => u.idUser == userId);
+    if (!userId) return ''
+    const user = this.users.find((u) => u.idUser == userId)
     if (user) {
-      return `${user.first_name || ''} ${user.last_name || ''} (${user.username || ''})`.trim();
+      return `${user.first_name || ''} ${user.last_name || ''} (${user.username || ''})`.trim()
     }
-    return '';
+    return ''
   }
 
   filterUsers(searchText) {
-    const dropdown = document.getElementById('userDropdown');
-    if (!dropdown) return;
+    const dropdown = document.getElementById('userDropdown')
+    if (!dropdown) return
 
     if (!searchText || searchText.trim() === '') {
-      dropdown.style.display = 'none';
-      return;
+      dropdown.style.display = 'none'
+      return
     }
 
-    const searchLower = searchText.toLowerCase();
-    const filtered = this.users.filter(user => {
-      const fullName = `${user.first_name || ''} ${user.last_name || ''} ${user.username || ''}`.toLowerCase();
-      return fullName.includes(searchLower);
-    });
+    const searchLower = searchText.toLowerCase()
+    const filtered = this.users.filter((user) => {
+      const fullName =
+        `${user.first_name || ''} ${user.last_name || ''} ${user.username || ''}`.toLowerCase()
+      return fullName.includes(searchLower)
+    })
 
     if (filtered.length === 0) {
-      dropdown.innerHTML = '<div class="p-2 text-secondary" style="padding: 8px 12px;">Ничего не найдено</div>';
-      dropdown.style.display = 'block';
-      return;
+      dropdown.innerHTML =
+        '<div class="p-2 text-secondary" style="padding: 8px 12px;">Ничего не найдено</div>'
+      dropdown.style.display = 'block'
+      return
     }
 
-    dropdown.innerHTML = filtered.map(user => {
-      const displayText = `${user.first_name || ''} ${user.last_name || ''} (${user.username || ''})`.trim();
-      const escapedText = displayText.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-      return `
+    dropdown.innerHTML = filtered
+      .map((user) => {
+        const displayText =
+          `${user.first_name || ''} ${user.last_name || ''} (${user.username || ''})`.trim()
+        const escapedText = displayText
+          .replace(/'/g, "\\'")
+          .replace(/"/g, '&quot;')
+        return `
         <div class="user-dropdown-item" style="padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #374151;" onclick="tables.order.selectUser(${user.idUser}, '${escapedText}')">
           ${displayText}
           <small style="color: #9ca3af; display: block; font-size: 0.75rem;">ID: ${user.idUser}</small>
         </div>
-      `;
-    }).join('');
+      `
+      })
+      .join('')
 
-    dropdown.style.display = 'block';
+    dropdown.style.display = 'block'
 
-    const input = document.getElementById('userSearchInput');
+    const input = document.getElementById('userSearchInput')
     if (input) {
-      const rect = input.getBoundingClientRect();
-      dropdown.style.position = 'absolute';
-      dropdown.style.top = `${rect.bottom + window.scrollY}px`;
-      dropdown.style.left = `${rect.left + window.scrollX}px`;
-      dropdown.style.width = `${rect.width}px`;
+      const rect = input.getBoundingClientRect()
+      dropdown.style.position = 'absolute'
+      dropdown.style.top = `${rect.bottom + window.scrollY}px`
+      dropdown.style.left = `${rect.left + window.scrollX}px`
+      dropdown.style.width = `${rect.width}px`
     }
 
-    dropdown.querySelectorAll('.user-dropdown-item').forEach(item => {
+    dropdown.querySelectorAll('.user-dropdown-item').forEach((item) => {
       item.addEventListener('mouseenter', () => {
-        item.style.backgroundColor = '#374151';
-      });
+        item.style.backgroundColor = '#374151'
+      })
       item.addEventListener('mouseleave', () => {
-        item.style.backgroundColor = 'transparent';
-      });
-    });
+        item.style.backgroundColor = 'transparent'
+      })
+    })
   }
 
   selectUser(userId, displayName) {
-    const input = document.getElementById('userSearchInput');
-    const hiddenInput = document.getElementById('selectedUserId');
-    const dropdown = document.getElementById('userDropdown');
+    const input = document.getElementById('userSearchInput')
+    const hiddenInput = document.getElementById('selectedUserId')
+    const dropdown = document.getElementById('userDropdown')
 
-    if (input) input.value = displayName;
-    if (hiddenInput) hiddenInput.value = userId;
-    if (dropdown) dropdown.style.display = 'none';
+    if (input) input.value = displayName
+    if (hiddenInput) hiddenInput.value = userId
+    if (dropdown) dropdown.style.display = 'none'
   }
 
   formatDateTime(dateString) {
-    if (!dateString) return '<span class="text-secondary">—</span>';
+    if (!dateString) return '<span class="text-secondary">—</span>'
     try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('ru-RU') + ' ' + date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+      const date = new Date(dateString)
+      return (
+        date.toLocaleDateString('ru-RU') +
+        ' ' +
+        date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+      )
     } catch (e) {
-      return String(dateString);
+      return String(dateString)
     }
   }
 
   formatDateTimeForInput(dateString) {
-    if (!dateString) return '';
+    if (!dateString) return ''
     try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return '';
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      const hours = String(date.getHours()).padStart(2, '0');
-      const minutes = String(date.getMinutes()).padStart(2, '0');
-      return `${year}-${month}-${day}T${hours}:${minutes}`;
+      const date = new Date(dateString)
+      if (isNaN(date.getTime())) return ''
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      const hours = String(date.getHours()).padStart(2, '0')
+      const minutes = String(date.getMinutes()).padStart(2, '0')
+      return `${year}-${month}-${day}T${hours}:${minutes}`
     } catch (e) {
-      return '';
+      return ''
     }
   }
 
   validateForm(data) {
-    const errors = [];
+    const errors = []
     if (!data.user_id || data.user_id === '') {
-      errors.push('Пользователь обязателен');
+      errors.push('Пользователь обязателен')
     }
-    return errors;
+    return errors
   }
 
   async createOrder(data) {
     try {
-      const result = await window.go.main.App.CreateOrder(data);
+      const result = await window.go.main.App.CreateOrder(data)
       if (result.success) {
-        this.closeModal();
-        await this.load(this.currentPage, this.currentSearch);
-        Toast.success('Заказ успешно создан');
-        const { renderTable } = await import('../TableContainer.js');
+        this.closeModal()
+        await this.load(this.currentPage, this.currentSearch)
+        Toast.success('Заказ успешно создан')
+        const { renderTable } = await import('../TableContainer.js')
         await renderTable('order', 'tableContainer', {
           onEdit: (table, id) => console.log('Edit', table, id),
-          onDelete: (table, id) => console.log('Delete', table, id)
-        });
+          onDelete: (table, id) => console.log('Delete', table, id),
+        })
       } else {
-        Toast.error(result.message);
+        Toast.error(result.message)
       }
     } catch (error) {
-      Toast.error('Ошибка: ' + error.message);
+      Toast.error('Ошибка: ' + error.message)
     }
   }
 
   async updateOrder(id, data) {
     try {
-      const result = await window.go.main.App.UpdateOrder(id, data);
+      const result = await window.go.main.App.UpdateOrder(id, data)
       if (result.success) {
-        this.closeModal();
-        await this.load(this.currentPage, this.currentSearch);
-        Toast.success('Заказ успешно обновлён');
-        const { renderTable } = await import('../TableContainer.js');
+        this.closeModal()
+        await this.load(this.currentPage, this.currentSearch)
+        Toast.success('Заказ успешно обновлён')
+        const { renderTable } = await import('../TableContainer.js')
         await renderTable('order', 'tableContainer', {
           onEdit: (table, id) => console.log('Edit', table, id),
-          onDelete: (table, id) => console.log('Delete', table, id)
-        });
+          onDelete: (table, id) => console.log('Delete', table, id),
+        })
       } else {
-        Toast.error(result.message);
+        Toast.error(result.message)
       }
     } catch (error) {
-      Toast.error('Ошибка: ' + error.message);
+      Toast.error('Ошибка: ' + error.message)
     }
   }
 
   async deleteOrder(id) {
     try {
-      const result = await window.go.main.App.DeleteOrder(id);
+      const result = await window.go.main.App.DeleteOrder(id)
       if (result.success) {
-        await this.load(this.currentPage, this.currentSearch);
-        Toast.success('Заказ успешно удалён');
-        const { renderTable } = await import('../TableContainer.js');
+        await this.load(this.currentPage, this.currentSearch)
+        Toast.success('Заказ успешно удалён')
+        const { renderTable } = await import('../TableContainer.js')
         await renderTable('order', 'tableContainer', {
           onEdit: (table, id) => console.log('Edit', table, id),
-          onDelete: (table, id) => console.log('Delete', table, id)
-        });
+          onDelete: (table, id) => console.log('Delete', table, id),
+        })
       } else {
-        Toast.error(result.message);
+        Toast.error(result.message)
       }
     } catch (error) {
-      Toast.error('Ошибка: ' + error.message);
+      Toast.error('Ошибка: ' + error.message)
     }
   }
 
   openCreateForm() {
-    this.editId = null;
-    this.formData = {};
-    this.renderModal();
+    this.editId = null
+    this.formData = {}
+    this.renderModal()
   }
 
   async openEditForm(id) {
-    this.editId = id;
-    const data = await this.loadOrderData(id);
+    this.editId = id
+    const data = await this.loadOrderData(id)
     if (data) {
-      this.formData = data;
-      this.renderModal();
+      this.formData = data
+      this.renderModal()
     }
   }
 
   async loadOrderData(id) {
     try {
-      return await window.go.main.App.GetOrder(id);
+      return await window.go.main.App.GetOrder(id)
     } catch (error) {
-      Toast.error('Ошибка загрузки данных заказа: ' + error.message);
-      return null;
+      Toast.error('Ошибка загрузки данных заказа: ' + error.message)
+      return null
     }
   }
 
   showDeleteModal(id) {
-    const order = this.data.rows?.find(row => row.order_id == id);
-    const orderNumber = order?.order_number || `#${id}`;
+    const order = this.data.rows?.find((row) => row.order_id == id)
+    const orderNumber = order?.order_number || `#${id}`
 
-    let modalContainer = document.getElementById('modalContainer');
+    let modalContainer = document.getElementById('modalContainer')
     if (!modalContainer) {
-      modalContainer = document.createElement('div');
-      modalContainer.id = 'modalContainer';
-      document.body.appendChild(modalContainer);
+      modalContainer = document.createElement('div')
+      modalContainer.id = 'modalContainer'
+      document.body.appendChild(modalContainer)
     }
 
     const modalHtml = `
@@ -325,47 +345,47 @@ export class OrderTable extends BaseTable {
           </div>
         </div>
       </div>
-    `;
+    `
 
-    modalContainer.innerHTML = modalHtml;
+    modalContainer.innerHTML = modalHtml
   }
 
   closeDeleteModal() {
-    document.getElementById('modalContainer').innerHTML = '';
+    document.getElementById('modalContainer').innerHTML = ''
   }
 
   async confirmDelete(id) {
-    this.closeDeleteModal();
-    await this.deleteOrder(id);
+    this.closeDeleteModal()
+    await this.deleteOrder(id)
   }
 
   closeModal() {
-    document.getElementById('modalContainer').innerHTML = '';
+    document.getElementById('modalContainer').innerHTML = ''
   }
 
   renderModal() {
-    const title = this.editId ? 'Редактировать заказ' : 'Новый заказ';
+    const title = this.editId ? 'Редактировать заказ' : 'Новый заказ'
 
     const statusOptions = {
-      'new': 'Новый',
-      'processing': 'В обработке',
-      'paid': 'Оплачен',
-      'cancelled': 'Отменён',
-      'completed': 'Завершён'
-    };
+      new: 'Новый',
+      processing: 'В обработке',
+      paid: 'Оплачен',
+      cancelled: 'Отменён',
+      completed: 'Завершён',
+    }
 
     const paymentMethodOptions = {
-      'cash': 'Наличные',
-      'card_online': 'Карта онлайн',
-      'card_courier': 'Карта курьеру',
-      'invoice': 'Счёт'
-    };
+      cash: 'Наличные',
+      card_online: 'Карта онлайн',
+      card_courier: 'Карта курьеру',
+      invoice: 'Счёт',
+    }
 
     const paymentStatusOptions = {
-      'pending': 'Ожидает',
-      'paid': 'Оплачен',
-      'refunded': 'Возврат'
-    };
+      pending: 'Ожидает',
+      paid: 'Оплачен',
+      refunded: 'Возврат',
+    }
 
     const modalHtml = `
       <div class="modal show" style="display: block; background: rgba(0,0,0,0.7);">
@@ -393,20 +413,35 @@ export class OrderTable extends BaseTable {
                   <div class="col-md-4 mb-3">
                     <label class="form-label">Статус</label>
                     <select name="status" class="form-select">
-                      ${Object.entries(statusOptions).map(([value, label]) => `<option value="${value}" ${this.formData.status === value ? 'selected' : ''}>${label}</option>`).join('')}
+                      ${Object.entries(statusOptions)
+                        .map(
+                          ([value, label]) =>
+                            `<option value="${value}" ${this.formData.status === value ? 'selected' : ''}>${label}</option>`,
+                        )
+                        .join('')}
                     </select>
                   </div>
                   <div class="col-md-4 mb-3">
                     <label class="form-label">Способ оплаты</label>
                     <select name="payment_method" class="form-select">
                       <option value="">— Не выбран —</option>
-                      ${Object.entries(paymentMethodOptions).map(([value, label]) => `<option value="${value}" ${this.formData.payment_method === value ? 'selected' : ''}>${label}</option>`).join('')}
+                      ${Object.entries(paymentMethodOptions)
+                        .map(
+                          ([value, label]) =>
+                            `<option value="${value}" ${this.formData.payment_method === value ? 'selected' : ''}>${label}</option>`,
+                        )
+                        .join('')}
                     </select>
                   </div>
                   <div class="col-md-4 mb-3">
                     <label class="form-label">Статус оплаты</label>
                     <select name="payment_status" class="form-select">
-                      ${Object.entries(paymentStatusOptions).map(([value, label]) => `<option value="${value}" ${this.formData.payment_status === value ? 'selected' : ''}>${label}</option>`).join('')}
+                      ${Object.entries(paymentStatusOptions)
+                        .map(
+                          ([value, label]) =>
+                            `<option value="${value}" ${this.formData.payment_status === value ? 'selected' : ''}>${label}</option>`,
+                        )
+                        .join('')}
                     </select>
                   </div>
                   <div class="col-12 mb-3">
@@ -427,106 +462,114 @@ export class OrderTable extends BaseTable {
           </div>
         </div>
       </div>
-    `;
-    document.getElementById('modalContainer').innerHTML = modalHtml;
+    `
+    document.getElementById('modalContainer').innerHTML = modalHtml
 
     setTimeout(() => {
       const handleClickOutside = (e) => {
-        const userDropdown = document.getElementById('userDropdown');
-        const userInput = document.getElementById('userSearchInput');
-        if (userDropdown && userInput && !userInput.contains(e.target) && !userDropdown.contains(e.target)) {
-          userDropdown.style.display = 'none';
+        const userDropdown = document.getElementById('userDropdown')
+        const userInput = document.getElementById('userSearchInput')
+        if (
+          userDropdown &&
+          userInput &&
+          !userInput.contains(e.target) &&
+          !userDropdown.contains(e.target)
+        ) {
+          userDropdown.style.display = 'none'
         }
-      };
-      document.addEventListener('click', handleClickOutside);
-    }, 100);
+      }
+      document.addEventListener('click', handleClickOutside)
+    }, 100)
   }
 
   async saveForm(e) {
-    e.preventDefault();
-    const form = e.target;
-    const formData = new FormData(form);
-    const data = Object.fromEntries(formData.entries());
+    e.preventDefault()
+    const form = e.target
+    const formData = new FormData(form)
+    const data = Object.fromEntries(formData.entries())
 
-    const hiddenUserId = document.getElementById('selectedUserId')?.value;
+    const hiddenUserId = document.getElementById('selectedUserId')?.value
     if (hiddenUserId && !data.user_id) {
-      data.user_id = hiddenUserId;
+      data.user_id = hiddenUserId
     }
 
     for (let key in data) {
-      if (data[key] === '') data[key] = null;
+      if (data[key] === '') data[key] = null
     }
 
-    const errors = this.validateForm(data);
+    const errors = this.validateForm(data)
     if (errors.length > 0) {
-      Toast.error(errors.join('<br>'));
-      return;
+      Toast.error(errors.join('<br>'))
+      return
     }
 
     if (this.editId) {
-      await this.updateOrder(this.editId, data);
+      await this.updateOrder(this.editId, data)
     } else {
-      await this.createOrder(data);
+      await this.createOrder(data)
     }
   }
 
   formatCellValue(column, value) {
-    if (value === null || value === undefined) return '<span class="text-secondary">—</span>';
-    if (column === 'user_id') return this.getUserName(value);
-    if (column === 'order_date') return this.formatDateTime(value);
+    if (value === null || value === undefined)
+      return '<span class="text-secondary">—</span>'
+    if (column === 'user_id') return this.getUserName(value)
+    if (column === 'order_date') return this.formatDateTime(value)
     if (column === 'status') {
       const statusMap = {
-        'new': 'Новый',
-        'processing': 'В обработке',
-        'paid': 'Оплачен',
-        'cancelled': 'Отменён',
-        'completed': 'Завершён'
-      };
-      return statusMap[value] || value;
+        new: 'Новый',
+        processing: 'В обработке',
+        paid: 'Оплачен',
+        cancelled: 'Отменён',
+        completed: 'Завершён',
+      }
+      return statusMap[value] || value
     }
     if (column === 'payment_method') {
       const methodMap = {
-        'cash': 'Наличные',
-        'card_online': 'Карта онлайн',
-        'card_courier': 'Карта курьеру',
-        'invoice': 'Счёт'
-      };
-      return methodMap[value] || value || '<span class="text-secondary">—</span>';
+        cash: 'Наличные',
+        card_online: 'Карта онлайн',
+        card_courier: 'Карта курьеру',
+        invoice: 'Счёт',
+      }
+      return (
+        methodMap[value] || value || '<span class="text-secondary">—</span>'
+      )
     }
     if (column === 'payment_status') {
       const statusMap = {
-        'pending': 'Ожидает',
-        'paid': 'Оплачен',
-        'refunded': 'Возврат'
-      };
-      return statusMap[value] || value;
+        pending: 'Ожидает',
+        paid: 'Оплачен',
+        refunded: 'Возврат',
+      }
+      return statusMap[value] || value
     }
-    return String(value);
+    return String(value)
   }
 
   renderRow(row, columns) {
     return `
       <tr>
-        ${columns.map(col => `<td>${this.formatCellValue(col, row[col])}</td>`).join('')}
+        ${columns.map((col) => `<td>${this.formatCellValue(col, row[col])}</td>`).join('')}
         <td class="text-end">
           <button class="btn btn-edit" onclick="tables.order.openEditForm(${row.order_id})">Изменить</button>
           <button class="btn btn-delete" onclick="tables.order.showDeleteModal(${row.order_id})">Удалить</button>
         </td>
       </tr>
-    `;
+    `
   }
 
   render(options = {}) {
-    const { onSearch, onPageChange } = options;
+    const { onSearch, onPageChange } = options
 
     if (!this.data.rows || this.data.rows.length === 0) {
-      return this.renderEmptyState('Заказы');
+      return this.renderEmptyState('Заказы')
     }
 
-    const columnNames = this.getColumnNames();
-    const columns = (this.data && this.data.columns) || Object.keys(columnNames);
-    const displayRows = [...this.data.rows];
-    while (displayRows.length < this.perPage) displayRows.push(null);
+    const columnNames = this.getColumnNames()
+    const columns = (this.data && this.data.columns) || Object.keys(columnNames)
+    const displayRows = [...this.data.rows]
+    while (displayRows.length < this.perPage) displayRows.push(null)
 
     return `
       <div class="table-card">
@@ -544,25 +587,27 @@ export class OrderTable extends BaseTable {
           <table class="table">
             <thead>
               <tr>
-                ${columns.map(col => `<th>${columnNames[col] || col}</th>`).join('')}
+                ${columns.map((col) => `<th>${columnNames[col] || col}</th>`).join('')}
                 <th class="text-end">Действия</th>
               </tr>
             </thead>
             <tbody>
-              ${displayRows.map(row => {
-      if (!row) {
-        return `<tr>${columns.map(() => '<td>&nbsp;</td>').join('')}<td>&nbsp;</td></tr>`;
-      }
-      return this.renderRow(row, columns);
-    }).join('')}
+              ${displayRows
+                .map((row) => {
+                  if (!row) {
+                    return `<tr>${columns.map(() => '<td>&nbsp;</td>').join('')}<td>&nbsp;</td></tr>`
+                  }
+                  return this.renderRow(row, columns)
+                })
+                .join('')}
             </tbody>
           </table>
         </div>
         ${this.renderPagination(onPageChange)}
       </div>
-    `;
+    `
   }
 }
 
-if (!window.tables) window.tables = {};
-window.tables.order = new OrderTable();
+if (!window.tables) window.tables = {}
+window.tables.order = new OrderTable()

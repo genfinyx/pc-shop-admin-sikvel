@@ -1,18 +1,18 @@
-import { BaseTable } from './BaseTable.js';
-import { Toast } from '../../services/Toast.js';
+import { BaseTable } from './BaseTable.js'
+import { Toast } from '../../services/Toast.js'
 
 export class InvoiceInTable extends BaseTable {
   constructor() {
-    super();
-    this.editId = null;
-    this.formData = {};
-    this.rowHeight = 53;
-    this.products = [];
-    this.data = { columns: [], rows: [], total: 0 };
+    super()
+    this.editId = null
+    this.formData = {}
+    this.rowHeight = 53
+    this.products = []
+    this.data = { columns: [], rows: [], total: 0 }
   }
 
   getTableName() {
-    return 'invoice_in';
+    return 'invoice_in'
   }
 
   getColumnNames() {
@@ -24,269 +24,289 @@ export class InvoiceInTable extends BaseTable {
       quantity: 'Количество',
       purchase_price: 'Цена закупки',
       supplier: 'Поставщик',
-      created_at: 'Создано'
-    };
+      created_at: 'Создано',
+    }
   }
 
   // ========== ЗАГРУЗКА ДАННЫХ ==========
   async load(page = 1, search = '') {
-    this.currentPage = page;
-    this.currentSearch = search;
-    await this.loadData('invoice_in', page, search);
-    await this.loadProducts();
+    this.currentPage = page
+    this.currentSearch = search
+    await this.loadData('invoice_in', page, search)
+    await this.loadProducts()
   }
 
   async loadData(table, page, search) {
     try {
-      const result = await window.go.main.App.GetTableData(table, page, search, this.perPage);
-      this.data = result;
-      return result;
+      const result = await window.go.main.App.GetTableData(
+        table,
+        page,
+        search,
+        this.perPage,
+      )
+      this.data = result
+      return result
     } catch (error) {
-      Toast.error('Ошибка загрузки данных: ' + error.message);
-      this.data = { columns: [], rows: [], total: 0 };
-      throw error;
+      Toast.error('Ошибка загрузки данных: ' + error.message)
+      this.data = { columns: [], rows: [], total: 0 }
+      throw error
     }
   }
 
   async loadProducts() {
     try {
-      const result = await window.go.main.App.GetTableData('product', 1, '', 1000);
-      this.products = result.rows || [];
+      const result = await window.go.main.App.GetTableData(
+        'product',
+        1,
+        '',
+        1000,
+      )
+      this.products = result.rows || []
     } catch (error) {
-      console.error('Ошибка загрузки товаров:', error);
-      this.products = [];
+      console.error('Ошибка загрузки товаров:', error)
+      this.products = []
     }
   }
 
   async changePage(page) {
-    this.currentPage = page;
-    await this.load(this.currentPage, this.currentSearch);
-    const { renderTable } = await import('../TableContainer.js');
+    this.currentPage = page
+    await this.load(this.currentPage, this.currentSearch)
+    const { renderTable } = await import('../TableContainer.js')
     await renderTable('invoice_in', 'tableContainer', {
       onEdit: (table, id) => console.log('Edit', table, id),
-      onDelete: (table, id) => console.log('Delete', table, id)
-    });
+      onDelete: (table, id) => console.log('Delete', table, id),
+    })
   }
 
   // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
   getProductName(productId) {
-    if (!productId) return '<span class="text-secondary">—</span>';
-    const product = this.products.find(p => p.product_id == productId);
+    if (!productId) return '<span class="text-secondary">—</span>'
+    const product = this.products.find((p) => p.product_id == productId)
     if (product) {
-      return product.name || String(productId);
+      return product.name || String(productId)
     }
-    return String(productId);
+    return String(productId)
   }
 
   getProductNameForInput(productId) {
-    if (!productId) return '';
-    const product = this.products.find(p => p.product_id == productId);
+    if (!productId) return ''
+    const product = this.products.find((p) => p.product_id == productId)
     if (product) {
-      return product.name;
+      return product.name
     }
-    return '';
+    return ''
   }
 
   // ========== ПОИСК В МОДАЛКЕ (ТОВАРЫ) ==========
   filterProducts(searchText) {
-    const dropdown = document.getElementById('productDropdown');
-    if (!dropdown) return;
+    const dropdown = document.getElementById('productDropdown')
+    if (!dropdown) return
 
     if (!searchText || searchText.trim() === '') {
-      dropdown.style.display = 'none';
-      return;
+      dropdown.style.display = 'none'
+      return
     }
 
-    const searchLower = searchText.toLowerCase();
-    const filtered = this.products.filter(product => {
-      const productName = (product.name || '').toLowerCase();
-      const productId = String(product.product_id || '');
-      return productName.includes(searchLower) || productId.includes(searchLower);
-    });
+    const searchLower = searchText.toLowerCase()
+    const filtered = this.products.filter((product) => {
+      const productName = (product.name || '').toLowerCase()
+      const productId = String(product.product_id || '')
+      return (
+        productName.includes(searchLower) || productId.includes(searchLower)
+      )
+    })
 
     if (filtered.length === 0) {
-      dropdown.innerHTML = '<div class="p-2 text-secondary" style="padding: 8px 12px;">Ничего не найдено</div>';
-      dropdown.style.display = 'block';
-      return;
+      dropdown.innerHTML =
+        '<div class="p-2 text-secondary" style="padding: 8px 12px;">Ничего не найдено</div>'
+      dropdown.style.display = 'block'
+      return
     }
 
-    dropdown.innerHTML = filtered.map(product => {
-      const displayText = product.name || `Товар #${product.product_id}`;
-      const escapedText = displayText.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-      return `
+    dropdown.innerHTML = filtered
+      .map((product) => {
+        const displayText = product.name || `Товар #${product.product_id}`
+        const escapedText = displayText
+          .replace(/'/g, "\\'")
+          .replace(/"/g, '&quot;')
+        return `
         <div class="product-dropdown-item" style="padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #374151;" onclick="tables.invoice_in.selectProduct(${product.product_id}, '${escapedText}')">
           ${displayText}
           <small style="color: #9ca3af; display: block; font-size: 0.75rem;">ID: ${product.product_id}</small>
         </div>
-      `;
-    }).join('');
+      `
+      })
+      .join('')
 
-    dropdown.style.display = 'block';
+    dropdown.style.display = 'block'
 
-    const input = document.getElementById('productSearchInput');
+    const input = document.getElementById('productSearchInput')
     if (input) {
-      const rect = input.getBoundingClientRect();
-      dropdown.style.position = 'absolute';
-      dropdown.style.top = `${rect.bottom + window.scrollY}px`;
-      dropdown.style.left = `${rect.left + window.scrollX}px`;
-      dropdown.style.width = `${rect.width}px`;
+      const rect = input.getBoundingClientRect()
+      dropdown.style.position = 'absolute'
+      dropdown.style.top = `${rect.bottom + window.scrollY}px`
+      dropdown.style.left = `${rect.left + window.scrollX}px`
+      dropdown.style.width = `${rect.width}px`
     }
 
-    dropdown.querySelectorAll('.product-dropdown-item').forEach(item => {
+    dropdown.querySelectorAll('.product-dropdown-item').forEach((item) => {
       item.addEventListener('mouseenter', () => {
-        item.style.backgroundColor = '#374151';
-      });
+        item.style.backgroundColor = '#374151'
+      })
       item.addEventListener('mouseleave', () => {
-        item.style.backgroundColor = 'transparent';
-      });
-    });
+        item.style.backgroundColor = 'transparent'
+      })
+    })
   }
 
   selectProduct(productId, displayName) {
-    const input = document.getElementById('productSearchInput');
-    const hiddenInput = document.getElementById('selectedProductId');
-    const dropdown = document.getElementById('productDropdown');
+    const input = document.getElementById('productSearchInput')
+    const hiddenInput = document.getElementById('selectedProductId')
+    const dropdown = document.getElementById('productDropdown')
 
-    if (input) input.value = displayName;
-    if (hiddenInput) hiddenInput.value = productId;
-    if (dropdown) dropdown.style.display = 'none';
+    if (input) input.value = displayName
+    if (hiddenInput) hiddenInput.value = productId
+    if (dropdown) dropdown.style.display = 'none'
   }
 
   // ========== ФУНКЦИИ ДАТЫ ==========
   formatDateTime(dateString) {
-    if (!dateString) return '<span class="text-secondary">—</span>';
+    if (!dateString) return '<span class="text-secondary">—</span>'
     try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('ru-RU') + ' ' +
-          date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+      const date = new Date(dateString)
+      return (
+        date.toLocaleDateString('ru-RU') +
+        ' ' +
+        date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+      )
     } catch (e) {
-      return String(dateString);
+      return String(dateString)
     }
   }
 
   formatDateTimeForInput(dateString) {
-    if (!dateString) return '';
+    if (!dateString) return ''
     try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return '';
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      const hours = String(date.getHours()).padStart(2, '0');
-      const minutes = String(date.getMinutes()).padStart(2, '0');
-      return `${year}-${month}-${day}T${hours}:${minutes}`;
+      const date = new Date(dateString)
+      if (isNaN(date.getTime())) return ''
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      const hours = String(date.getHours()).padStart(2, '0')
+      const minutes = String(date.getMinutes()).padStart(2, '0')
+      return `${year}-${month}-${day}T${hours}:${minutes}`
     } catch (e) {
-      return '';
+      return ''
     }
   }
 
   // ========== CRUD ОПЕРАЦИИ ==========
   async createInvoiceIn(data) {
     try {
-      const result = await window.go.main.App.CreateInvoiceIn(data);
+      const result = await window.go.main.App.CreateInvoiceIn(data)
       if (result.success) {
-        this.closeModal();
-        await this.load(this.currentPage, this.currentSearch);
-        Toast.success('Приходная накладная создана');
-        const { renderTable } = await import('../TableContainer.js');
+        this.closeModal()
+        await this.load(this.currentPage, this.currentSearch)
+        Toast.success('Приходная накладная создана')
+        const { renderTable } = await import('../TableContainer.js')
         await renderTable('invoice_in', 'tableContainer', {
           onEdit: (table, id) => console.log('Edit', table, id),
-          onDelete: (table, id) => console.log('Delete', table, id)
-        });
+          onDelete: (table, id) => console.log('Delete', table, id),
+        })
       } else {
-        Toast.error(result.message);
+        Toast.error(result.message)
       }
     } catch (error) {
-      Toast.error('Ошибка: ' + error.message);
+      Toast.error('Ошибка: ' + error.message)
     }
   }
 
   async updateInvoiceIn(id, data) {
     try {
-      const result = await window.go.main.App.UpdateInvoiceIn(id, data);
+      const result = await window.go.main.App.UpdateInvoiceIn(id, data)
       if (result.success) {
-        this.closeModal();
-        await this.load(this.currentPage, this.currentSearch);
-        Toast.success('Приходная накладная обновлена');
-        const { renderTable } = await import('../TableContainer.js');
+        this.closeModal()
+        await this.load(this.currentPage, this.currentSearch)
+        Toast.success('Приходная накладная обновлена')
+        const { renderTable } = await import('../TableContainer.js')
         await renderTable('invoice_in', 'tableContainer', {
           onEdit: (table, id) => console.log('Edit', table, id),
-          onDelete: (table, id) => console.log('Delete', table, id)
-        });
+          onDelete: (table, id) => console.log('Delete', table, id),
+        })
       } else {
-        Toast.error(result.message);
+        Toast.error(result.message)
       }
     } catch (error) {
-      Toast.error('Ошибка: ' + error.message);
+      Toast.error('Ошибка: ' + error.message)
     }
   }
 
   async deleteInvoiceIn(id) {
     try {
-      const result = await window.go.main.App.DeleteInvoiceIn(id);
+      const result = await window.go.main.App.DeleteInvoiceIn(id)
       if (result.success) {
-        await this.load(this.currentPage, this.currentSearch);
-        Toast.success('Приходная накладная удалена');
-        const { renderTable } = await import('../TableContainer.js');
+        await this.load(this.currentPage, this.currentSearch)
+        Toast.success('Приходная накладная удалена')
+        const { renderTable } = await import('../TableContainer.js')
         await renderTable('invoice_in', 'tableContainer', {
           onEdit: (table, id) => console.log('Edit', table, id),
-          onDelete: (table, id) => console.log('Delete', table, id)
-        });
+          onDelete: (table, id) => console.log('Delete', table, id),
+        })
       } else {
-        Toast.error(result.message);
+        Toast.error(result.message)
       }
     } catch (error) {
-      Toast.error('Ошибка: ' + error.message);
+      Toast.error('Ошибка: ' + error.message)
     }
   }
 
   // ========== ФУНКЦИИ ВАЛИДАЦИИ ==========
   validateForm(data) {
-    const errors = [];
+    const errors = []
     if (!data.product_id || data.product_id === '') {
-      errors.push('Товар обязателен');
+      errors.push('Товар обязателен')
     }
     if (!data.quantity || data.quantity <= 0) {
-      errors.push('Количество должно быть положительным');
+      errors.push('Количество должно быть положительным')
     }
     if (!data.purchase_price || data.purchase_price <= 0) {
-      errors.push('Цена закупки должна быть положительной');
+      errors.push('Цена закупки должна быть положительной')
     }
-    return errors;
+    return errors
   }
 
   // ========== МОДАЛЬНЫЕ ОКНА ==========
   openCreateForm() {
-    this.editId = null;
-    this.formData = {};
-    this.renderModal();
+    this.editId = null
+    this.formData = {}
+    this.renderModal()
   }
 
   async openEditForm(id) {
-    this.editId = id;
-    const data = await this.loadInvoiceInData(id);
+    this.editId = id
+    const data = await this.loadInvoiceInData(id)
     if (data) {
-      this.formData = data;
-      this.renderModal();
+      this.formData = data
+      this.renderModal()
     }
   }
 
   async loadInvoiceInData(id) {
     try {
-      const data = await window.go.main.App.GetInvoiceIn(id);
-      return data;
+      const data = await window.go.main.App.GetInvoiceIn(id)
+      return data
     } catch (error) {
-      Toast.error('Ошибка загрузки данных накладной: ' + error.message);
-      return null;
+      Toast.error('Ошибка загрузки данных накладной: ' + error.message)
+      return null
     }
   }
 
   showDeleteModal(id) {
-    let modalContainer = document.getElementById('modalContainer');
+    let modalContainer = document.getElementById('modalContainer')
     if (!modalContainer) {
-      modalContainer = document.createElement('div');
-      modalContainer.id = 'modalContainer';
-      document.body.appendChild(modalContainer);
+      modalContainer = document.createElement('div')
+      modalContainer.id = 'modalContainer'
+      document.body.appendChild(modalContainer)
     }
 
     const modalHtml = `
@@ -310,26 +330,28 @@ export class InvoiceInTable extends BaseTable {
           </div>
         </div>
       </div>
-    `;
+    `
 
-    modalContainer.innerHTML = modalHtml;
+    modalContainer.innerHTML = modalHtml
   }
 
   closeDeleteModal() {
-    document.getElementById('modalContainer').innerHTML = '';
+    document.getElementById('modalContainer').innerHTML = ''
   }
 
   async confirmDelete(id) {
-    this.closeDeleteModal();
-    await this.deleteInvoiceIn(id);
+    this.closeDeleteModal()
+    await this.deleteInvoiceIn(id)
   }
 
   closeModal() {
-    document.getElementById('modalContainer').innerHTML = '';
+    document.getElementById('modalContainer').innerHTML = ''
   }
 
   renderModal() {
-    const title = this.editId ? 'Редактировать приходную накладную' : 'Новая приходная накладная';
+    const title = this.editId
+      ? 'Редактировать приходную накладную'
+      : 'Новая приходная накладная'
 
     const modalHtml = `
       <div class="modal show" style="display: block; background: rgba(0,0,0,0.7);">
@@ -388,91 +410,100 @@ export class InvoiceInTable extends BaseTable {
           </div>
         </div>
       </div>
-    `;
-    document.getElementById('modalContainer').innerHTML = modalHtml;
+    `
+    document.getElementById('modalContainer').innerHTML = modalHtml
 
     setTimeout(() => {
       const handleClickOutside = (e) => {
-        const productDropdown = document.getElementById('productDropdown');
-        const productInput = document.getElementById('productSearchInput');
+        const productDropdown = document.getElementById('productDropdown')
+        const productInput = document.getElementById('productSearchInput')
 
-        if (productDropdown && productInput && !productInput.contains(e.target) && !productDropdown.contains(e.target)) {
-          productDropdown.style.display = 'none';
+        if (
+          productDropdown &&
+          productInput &&
+          !productInput.contains(e.target) &&
+          !productDropdown.contains(e.target)
+        ) {
+          productDropdown.style.display = 'none'
         }
-      };
-      document.addEventListener('click', handleClickOutside);
-    }, 100);
+      }
+      document.addEventListener('click', handleClickOutside)
+    }, 100)
   }
 
   async saveForm(e) {
-    e.preventDefault();
-    const form = e.target;
-    const formData = new FormData(form);
-    const data = Object.fromEntries(formData.entries());
+    e.preventDefault()
+    const form = e.target
+    const formData = new FormData(form)
+    const data = Object.fromEntries(formData.entries())
 
-    const hiddenProductId = document.getElementById('selectedProductId')?.value;
+    const hiddenProductId = document.getElementById('selectedProductId')?.value
     if (hiddenProductId && !data.product_id) {
-      data.product_id = hiddenProductId;
+      data.product_id = hiddenProductId
     }
 
     for (let key in data) {
-      if (data[key] === '') data[key] = null;
+      if (data[key] === '') data[key] = null
     }
 
-    const errors = this.validateForm(data);
+    const errors = this.validateForm(data)
     if (errors.length > 0) {
-      Toast.error(errors.join('<br>'));
-      return;
+      Toast.error(errors.join('<br>'))
+      return
     }
 
     if (this.editId) {
-      await this.updateInvoiceIn(this.editId, data);
+      await this.updateInvoiceIn(this.editId, data)
     } else {
-      await this.createInvoiceIn(data);
+      await this.createInvoiceIn(data)
     }
   }
 
   // ========== ФОРМАТИРОВАНИЕ ЯЧЕЕК ТАБЛИЦЫ ==========
   formatCellValue(column, value) {
-    if (value === null || value === undefined) return '<span class="text-secondary">—</span>';
+    if (value === null || value === undefined)
+      return '<span class="text-secondary">—</span>'
 
-    if (column === 'product_id') return this.getProductName(value);
-    if (column === 'invoice_date' || column === 'created_at') return this.formatDateTime(value);
-    if (column === 'purchase_price') return Number(value).toFixed(2) + ' ₽';
-    if (column === 'quantity') return String(value);
+    if (column === 'product_id') return this.getProductName(value)
+    if (column === 'invoice_date' || column === 'created_at')
+      return this.formatDateTime(value)
+    if (column === 'purchase_price') return Number(value).toFixed(2) + ' ₽'
+    if (column === 'quantity') return String(value)
 
-    return String(value);
+    return String(value)
   }
 
   renderRow(row, columns) {
     return `
     <tr>
-      ${columns.map(col => {
-      if (col === 'purchase_price') {
-        return `<td>${Number(row.purchase_price || 0).toFixed(2)} ₽</td>`;
-      }
-      return `<td>${this.formatCellValue(col, row[col])}</td>`;
-    }).join('')}
+      ${columns
+        .map((col) => {
+          if (col === 'purchase_price') {
+            return `<td>${Number(row.purchase_price || 0).toFixed(2)} ₽</td>`
+          }
+          return `<td>${this.formatCellValue(col, row[col])}</td>`
+        })
+        .join('')}
       <td class="text-end">
         <button class="btn btn-edit" onclick="tables.invoice_in.openEditForm(${row.invoice_in_id})">Изменить</button>
         <button class="btn btn-delete" onclick="tables.invoice_in.showDeleteModal(${row.invoice_in_id})">Удалить</button>
       </td>
     </tr>
-  `;
+  `
   }
 
   // ========== ОСНОВНОЙ RENDER ==========
   render(options = {}) {
-    const { onSearch, onPageChange } = options;
+    const { onSearch, onPageChange } = options
 
     if (!this.data.rows || this.data.rows.length === 0) {
-      return this.renderEmptyState('Приходные накладные');
+      return this.renderEmptyState('Приходные накладные')
     }
 
-    const columnNames = this.getColumnNames();
-    const columns = (this.data && this.data.columns) || Object.keys(columnNames);
-    const displayRows = [...this.data.rows];
-    while (displayRows.length < this.perPage) displayRows.push(null);
+    const columnNames = this.getColumnNames()
+    const columns = (this.data && this.data.columns) || Object.keys(columnNames)
+    const displayRows = [...this.data.rows]
+    while (displayRows.length < this.perPage) displayRows.push(null)
 
     return `
       <div class="table-card">
@@ -491,27 +522,29 @@ export class InvoiceInTable extends BaseTable {
           <table class="table">
             <thead>
               <tr>
-                ${columns.map(col => `<th style="text-align: left;">${columnNames[col] || col}</th>`).join('')}
+                ${columns.map((col) => `<th style="text-align: left;">${columnNames[col] || col}</th>`).join('')}
                 <th style="text-align: right;">Действия</th>
               </tr>
             </thead>
             <tbody>
-              ${displayRows.map(row => {
-      if (!row) {
-        return `</tr>${columns.map(() => '<td>&nbsp;</td>').join('')}<td>&nbsp;</td></tr>`;
-      }
-      return this.renderRow(row, columns);
-    }).join('')}
+              ${displayRows
+                .map((row) => {
+                  if (!row) {
+                    return `</tr>${columns.map(() => '<td>&nbsp;</td>').join('')}<td>&nbsp;</td></tr>`
+                  }
+                  return this.renderRow(row, columns)
+                })
+                .join('')}
             </tbody>
           </table>
         </div>
 
         ${this.renderPagination(onPageChange)}
       </div>
-    `;
+    `
   }
 }
 
 // ========== РЕГИСТРАЦИЯ ТАБЛИЦЫ ==========
-if (!window.tables) window.tables = {};
-window.tables.invoice_in = new InvoiceInTable();
+if (!window.tables) window.tables = {}
+window.tables.invoice_in = new InvoiceInTable()

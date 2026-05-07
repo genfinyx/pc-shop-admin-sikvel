@@ -1,12 +1,12 @@
-import { BaseTable } from './BaseTable.js';
+import { BaseTable } from './BaseTable.js'
 
 export class MainPage extends BaseTable {
   constructor() {
-    super();
+    super()
   }
 
   getTableName() {
-    return 'main';
+    return 'main'
   }
 
   render() {
@@ -45,6 +45,6 @@ export class MainPage extends BaseTable {
           </div>
         </div>
       </div>
-    `;
+    `
   }
 }

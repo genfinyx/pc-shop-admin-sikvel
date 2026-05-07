@@ -1,18 +1,18 @@
-import { BaseTable } from './BaseTable.js';
-import { Toast } from '../../services/Toast.js';
+import { BaseTable } from './BaseTable.js'
+import { Toast } from '../../services/Toast.js'
 
 export class ProductTable extends BaseTable {
   constructor() {
-    super();
-    this.editId = null;
-    this.formData = {};
-    this.rowHeight = 53;
-    this.categories = [];
-    this.data = { columns: [], rows: [], total: 0 };
+    super()
+    this.editId = null
+    this.formData = {}
+    this.rowHeight = 53
+    this.categories = []
+    this.data = { columns: [], rows: [], total: 0 }
   }
 
   getTableName() {
-    return 'product';
+    return 'product'
   }
 
   getColumnNames() {
@@ -29,209 +29,221 @@ export class ProductTable extends BaseTable {
       main_image_path: 'Изображение',
       is_available: 'Доступен',
       created_at: 'Создан',
-      updated_at: 'Обновлён'
-    };
+      updated_at: 'Обновлён',
+    }
   }
 
   async handleSearch(event) {
-    if (event) event.preventDefault();
-    const input = document.getElementById('searchInput');
-    this.currentSearch = input ? input.value : '';
-    this.currentPage = 1;
-    await this.load(this.currentPage, this.currentSearch);
-    const { renderTable } = await import('../TableContainer.js');
+    if (event) event.preventDefault()
+    const input = document.getElementById('searchInput')
+    this.currentSearch = input ? input.value : ''
+    this.currentPage = 1
+    await this.load(this.currentPage, this.currentSearch)
+    const { renderTable } = await import('../TableContainer.js')
     await renderTable('product', 'tableContainer', {
       onEdit: (table, id) => console.log('Edit', table, id),
-      onDelete: (table, id) => console.log('Delete', table, id)
-    });
+      onDelete: (table, id) => console.log('Delete', table, id),
+    })
   }
 
   async handleSearchClear() {
-    this.currentSearch = '';
-    this.currentPage = 1;
-    const input = document.getElementById('searchInput');
-    if (input) input.value = '';
-    await this.load(this.currentPage, this.currentSearch);
-    const { renderTable } = await import('../TableContainer.js');
+    this.currentSearch = ''
+    this.currentPage = 1
+    const input = document.getElementById('searchInput')
+    if (input) input.value = ''
+    await this.load(this.currentPage, this.currentSearch)
+    const { renderTable } = await import('../TableContainer.js')
     await renderTable('product', 'tableContainer', {
       onEdit: (table, id) => console.log('Edit', table, id),
-      onDelete: (table, id) => console.log('Delete', table, id)
-    });
+      onDelete: (table, id) => console.log('Delete', table, id),
+    })
   }
 
   async load(page = 1, search = '') {
-    this.currentPage = page;
-    this.currentSearch = search;
-    await this.loadData('product', page, search);
-    await this.loadCategories();
+    this.currentPage = page
+    this.currentSearch = search
+    await this.loadData('product', page, search)
+    await this.loadCategories()
   }
 
   async loadData(table, page, search) {
     try {
-      const result = await window.go.main.App.GetTableData(table, page, search, this.perPage);
-      this.data = result;
-      return result;
+      const result = await window.go.main.App.GetTableData(
+        table,
+        page,
+        search,
+        this.perPage,
+      )
+      this.data = result
+      return result
     } catch (error) {
-      Toast.error('Ошибка загрузки данных: ' + error.message);
-      this.data = { columns: [], rows: [], total: 0 };
-      throw error;
+      Toast.error('Ошибка загрузки данных: ' + error.message)
+      this.data = { columns: [], rows: [], total: 0 }
+      throw error
     }
   }
 
   async loadCategories() {
     try {
-      this.categories = await window.go.main.App.GetCategories();
+      this.categories = await window.go.main.App.GetCategories()
     } catch (error) {
-      console.error('Ошибка загрузки категорий:', error);
-      this.categories = [];
+      console.error('Ошибка загрузки категорий:', error)
+      this.categories = []
     }
   }
 
   async changePage(page) {
-    this.currentPage = page;
-    await this.load(this.currentPage, this.currentSearch);
-    const { renderTable } = await import('../TableContainer.js');
+    this.currentPage = page
+    await this.load(this.currentPage, this.currentSearch)
+    const { renderTable } = await import('../TableContainer.js')
     await renderTable('product', 'tableContainer', {
       onEdit: (table, id) => console.log('Edit', table, id),
-      onDelete: (table, id) => console.log('Delete', table, id)
-    });
+      onDelete: (table, id) => console.log('Delete', table, id),
+    })
   }
 
   getCategoryName(categoryId) {
-    if (!categoryId) return '<span class="text-secondary">—</span>';
-    const category = this.categories.find(c => c.category_id == categoryId);
-    return category ? category.name : String(categoryId);
+    if (!categoryId) return '<span class="text-secondary">—</span>'
+    const category = this.categories.find((c) => c.category_id == categoryId)
+    return category ? category.name : String(categoryId)
   }
 
   formatDateTime(dateString) {
-    if (!dateString) return '<span class="text-secondary">—</span>';
+    if (!dateString) return '<span class="text-secondary">—</span>'
     try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('ru-RU') + ' ' +
-          date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+      const date = new Date(dateString)
+      return (
+        date.toLocaleDateString('ru-RU') +
+        ' ' +
+        date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+      )
     } catch (e) {
-      return String(dateString);
+      return String(dateString)
     }
   }
 
   formatDateTimeForInput(dateString) {
-    if (!dateString) return '';
+    if (!dateString) return ''
     try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return '';
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      const hours = String(date.getHours()).padStart(2, '0');
-      const minutes = String(date.getMinutes()).padStart(2, '0');
-      return `${year}-${month}-${day}T${hours}:${minutes}`;
+      const date = new Date(dateString)
+      if (isNaN(date.getTime())) return ''
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      const hours = String(date.getHours()).padStart(2, '0')
+      const minutes = String(date.getMinutes()).padStart(2, '0')
+      return `${year}-${month}-${day}T${hours}:${minutes}`
     } catch (e) {
-      return '';
+      return ''
     }
   }
 
   validateForm(data) {
-    const errors = [];
-    if (!data.name?.trim()) errors.push('Название товара обязательно');
-    if (!data.price || parseFloat(data.price) <= 0) errors.push('Цена должна быть положительным числом');
-    if (!data.category_id || data.category_id === '') errors.push('Категория обязательна');
-    if (data.stock && (parseInt(data.stock) < 0)) errors.push('Остаток не может быть отрицательным');
-    if (data.discount_price && parseFloat(data.discount_price) < 0) errors.push('Цена со скидкой не может быть отрицательной');
-    return errors;
+    const errors = []
+    if (!data.name?.trim()) errors.push('Название товара обязательно')
+    if (!data.price || parseFloat(data.price) <= 0)
+      errors.push('Цена должна быть положительным числом')
+    if (!data.category_id || data.category_id === '')
+      errors.push('Категория обязательна')
+    if (data.stock && parseInt(data.stock) < 0)
+      errors.push('Остаток не может быть отрицательным')
+    if (data.discount_price && parseFloat(data.discount_price) < 0)
+      errors.push('Цена со скидкой не может быть отрицательной')
+    return errors
   }
 
   async createProduct(data) {
     try {
-      const result = await window.go.main.App.CreateProduct(data);
+      const result = await window.go.main.App.CreateProduct(data)
       if (result.success) {
-        this.closeModal();
-        await this.load(this.currentPage, this.currentSearch);
-        Toast.success('Товар успешно создан');
-        const { renderTable } = await import('../TableContainer.js');
+        this.closeModal()
+        await this.load(this.currentPage, this.currentSearch)
+        Toast.success('Товар успешно создан')
+        const { renderTable } = await import('../TableContainer.js')
         await renderTable('product', 'tableContainer', {
           onEdit: (table, id) => console.log('Edit', table, id),
-          onDelete: (table, id) => console.log('Delete', table, id)
-        });
+          onDelete: (table, id) => console.log('Delete', table, id),
+        })
       } else {
-        Toast.error(result.message);
+        Toast.error(result.message)
       }
     } catch (error) {
-      Toast.error('Ошибка: ' + error.message);
+      Toast.error('Ошибка: ' + error.message)
     }
   }
 
   async updateProduct(id, data) {
     try {
-      const result = await window.go.main.App.UpdateProduct(id, data);
+      const result = await window.go.main.App.UpdateProduct(id, data)
       if (result.success) {
-        this.closeModal();
-        await this.load(this.currentPage, this.currentSearch);
-        Toast.success('Товар успешно обновлён');
-        const { renderTable } = await import('../TableContainer.js');
+        this.closeModal()
+        await this.load(this.currentPage, this.currentSearch)
+        Toast.success('Товар успешно обновлён')
+        const { renderTable } = await import('../TableContainer.js')
         await renderTable('product', 'tableContainer', {
           onEdit: (table, id) => console.log('Edit', table, id),
-          onDelete: (table, id) => console.log('Delete', table, id)
-        });
+          onDelete: (table, id) => console.log('Delete', table, id),
+        })
       } else {
-        Toast.error(result.message);
+        Toast.error(result.message)
       }
     } catch (error) {
-      Toast.error('Ошибка: ' + error.message);
+      Toast.error('Ошибка: ' + error.message)
     }
   }
 
   async deleteProduct(id) {
     try {
-      const result = await window.go.main.App.DeleteProduct(id);
+      const result = await window.go.main.App.DeleteProduct(id)
       if (result.success) {
-        await this.load(this.currentPage, this.currentSearch);
-        Toast.success('Товар успешно удалён');
-        const { renderTable } = await import('../TableContainer.js');
+        await this.load(this.currentPage, this.currentSearch)
+        Toast.success('Товар успешно удалён')
+        const { renderTable } = await import('../TableContainer.js')
         await renderTable('product', 'tableContainer', {
           onEdit: (table, id) => console.log('Edit', table, id),
-          onDelete: (table, id) => console.log('Delete', table, id)
-        });
+          onDelete: (table, id) => console.log('Delete', table, id),
+        })
       } else {
-        Toast.error(result.message);
+        Toast.error(result.message)
       }
     } catch (error) {
-      Toast.error('Ошибка: ' + error.message);
+      Toast.error('Ошибка: ' + error.message)
     }
   }
 
   openCreateForm() {
-    this.editId = null;
-    this.formData = {};
-    this.renderModal();
+    this.editId = null
+    this.formData = {}
+    this.renderModal()
   }
 
   async openEditForm(id) {
-    this.editId = id;
-    const data = await this.loadProductData(id);
+    this.editId = id
+    const data = await this.loadProductData(id)
     if (data) {
-      this.formData = data;
-      this.renderModal();
+      this.formData = data
+      this.renderModal()
     }
   }
 
   async loadProductData(id) {
     try {
-      return await window.go.main.App.GetProduct(id);
+      return await window.go.main.App.GetProduct(id)
     } catch (error) {
-      Toast.error('Ошибка загрузки данных товара: ' + error.message);
-      return null;
+      Toast.error('Ошибка загрузки данных товара: ' + error.message)
+      return null
     }
   }
 
   showDeleteModal(id) {
-    const product = this.data.rows?.find(row => row.product_id == id);
-    const productName = product?.name || `#${id}`;
+    const product = this.data.rows?.find((row) => row.product_id == id)
+    const productName = product?.name || `#${id}`
 
-    let modalContainer = document.getElementById('modalContainer');
+    let modalContainer = document.getElementById('modalContainer')
     if (!modalContainer) {
-      modalContainer = document.createElement('div');
-      modalContainer.id = 'modalContainer';
-      document.body.appendChild(modalContainer);
+      modalContainer = document.createElement('div')
+      modalContainer.id = 'modalContainer'
+      document.body.appendChild(modalContainer)
     }
 
     const modalHtml = `
@@ -253,30 +265,33 @@ export class ProductTable extends BaseTable {
           </div>
         </div>
       </div>
-    `;
+    `
 
-    modalContainer.innerHTML = modalHtml;
+    modalContainer.innerHTML = modalHtml
   }
 
   closeDeleteModal() {
-    document.getElementById('modalContainer').innerHTML = '';
+    document.getElementById('modalContainer').innerHTML = ''
   }
 
   async confirmDelete(id) {
-    this.closeDeleteModal();
-    await this.deleteProduct(id);
+    this.closeDeleteModal()
+    await this.deleteProduct(id)
   }
 
   closeModal() {
-    document.getElementById('modalContainer').innerHTML = '';
+    document.getElementById('modalContainer').innerHTML = ''
   }
 
   renderModal() {
-    const title = this.editId ? 'Редактировать товар' : 'Новый товар';
+    const title = this.editId ? 'Редактировать товар' : 'Новый товар'
 
-    const categoryOptions = this.categories.map(cat =>
-        `<option value="${cat.category_id}" ${this.formData.category_id == cat.category_id ? 'selected' : ''}>${cat.name}</option>`
-    ).join('');
+    const categoryOptions = this.categories
+      .map(
+        (cat) =>
+          `<option value="${cat.category_id}" ${this.formData.category_id == cat.category_id ? 'selected' : ''}>${cat.name}</option>`,
+      )
+      .join('')
 
     const modalHtml = `
       <div class="modal show" style="display: block; background: rgba(0,0,0,0.7);">
@@ -360,91 +375,102 @@ export class ProductTable extends BaseTable {
           </div>
         </div>
       </div>
-    `;
-    document.getElementById('modalContainer').innerHTML = modalHtml;
+    `
+    document.getElementById('modalContainer').innerHTML = modalHtml
   }
 
   async saveForm(e) {
-    e.preventDefault();
-    const form = e.target;
-    const formData = new FormData(form);
-    const data = Object.fromEntries(formData.entries());
+    e.preventDefault()
+    const form = e.target
+    const formData = new FormData(form)
+    const data = Object.fromEntries(formData.entries())
 
     for (let key in data) {
-      if (data[key] === '') data[key] = null;
+      if (data[key] === '') data[key] = null
     }
 
     if (this.editId) {
-      delete data.updated_at;
+      delete data.updated_at
     }
 
-    const errors = this.validateForm(data);
+    const errors = this.validateForm(data)
     if (errors.length > 0) {
-      Toast.error(errors.join('<br>'));
-      return;
+      Toast.error(errors.join('<br>'))
+      return
     }
 
     if (this.editId) {
-      await this.updateProduct(this.editId, data);
+      await this.updateProduct(this.editId, data)
     } else {
-      await this.createProduct(data);
+      await this.createProduct(data)
     }
   }
 
   formatCellValue(column, value) {
-    if (value === null || value === undefined) return '<span class="text-secondary">—</span>';
+    if (value === null || value === undefined)
+      return '<span class="text-secondary">—</span>'
 
     if (column === 'price' || column === 'discount_price') {
-      return Number(value).toFixed(2) + ' ₽';
+      return Number(value).toFixed(2) + ' ₽'
     }
 
     if (column === 'category_id') {
-      return this.getCategoryName(value);
+      return this.getCategoryName(value)
     }
 
     if (column === 'is_available') {
-      return value ? 'Да' : 'Нет';
+      return value ? 'Да' : 'Нет'
     }
 
-    if ((column === 'created_at' || column === 'updated_at' || column === 'discount_start' || column === 'discount_end') && value) {
-      return this.formatDateTime(value);
+    if (
+      (column === 'created_at' ||
+        column === 'updated_at' ||
+        column === 'discount_start' ||
+        column === 'discount_end') &&
+      value
+    ) {
+      return this.formatDateTime(value)
     }
 
     if (column === 'main_image_path' && value && value.length > 40) {
-      return `<span title="${value}">${value.substring(0, 40)}…</span>`;
+      return `<span title="${value}">${value.substring(0, 40)}…</span>`
     }
 
-    return String(value);
+    return String(value)
   }
 
   renderRow(row, columns) {
     return `
       <tr>
-        ${columns.map(col => `
+        ${columns
+          .map(
+            (col) => `
           <td>${this.formatCellValue(col, row[col])}<\/td>
-        `).join('')}
+        `,
+          )
+          .join('')}
         <td class="text-end">
           <button class="btn btn-edit" onclick="tables.product.openEditForm(${row.product_id})">Изменить</button>
           <button class="btn btn-delete" onclick="tables.product.showDeleteModal(${row.product_id})">Удалить</button>
         <\/td>
       <\/tr>
-    `;
+    `
   }
 
   render(options = {}) {
-    const { onSearch, onPageChange } = options;
+    const { onSearch, onPageChange } = options
 
     if (!this.data.rows || this.data.rows.length === 0) {
-      return this.renderEmptyState('Товары');
+      return this.renderEmptyState('Товары')
     }
 
-    const columnNames = this.getColumnNames();
-    const columns = (this.data && this.data.columns) || Object.keys(columnNames);
+    const columnNames = this.getColumnNames()
+    const columns = (this.data && this.data.columns) || Object.keys(columnNames)
 
     // Всегда добиваем до 8 строк
-    const displayRows = [...this.data.rows];
+    const displayRows = [...this.data.rows]
     while (displayRows.length < this.perPage) {
-      displayRows.push(null);
+      displayRows.push(null)
     }
 
     return `
@@ -464,29 +490,31 @@ export class ProductTable extends BaseTable {
         <table class="table">
           <thead>
             <tr>
-              ${columns.map(col => `<th>${columnNames[col] || col}</th>`).join('')}
+              ${columns.map((col) => `<th>${columnNames[col] || col}</th>`).join('')}
               <th class="text-end">Действия</th>
             </tr>
           </thead>
           <tbody>
-            ${displayRows.map(row => {
-      if (!row) {
-        return `<tr style="height: ${this.rowHeight}px;">
+            ${displayRows
+              .map((row) => {
+                if (!row) {
+                  return `<tr style="height: ${this.rowHeight}px;">
       ${columns.map(() => `<td style="padding: 0.75rem;">&nbsp;<\/td>`).join('')}
       <td style="padding: 0.75rem;">&nbsp;<\/td>
-    <\/tr>`;
-      }
-      return this.renderRow(row, columns);
-    }).join('')}
+    <\/tr>`
+                }
+                return this.renderRow(row, columns)
+              })
+              .join('')}
           </tbody>
         </table>
       </div>
 
       ${this.renderPagination(onPageChange)}
     </div>
-  `;
+  `
   }
 }
 
-if (!window.tables) window.tables = {};
-window.tables.product = new ProductTable();
+if (!window.tables) window.tables = {}
+window.tables.product = new ProductTable()

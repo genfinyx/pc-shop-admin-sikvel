@@ -1,19 +1,19 @@
-import { BaseTable } from './BaseTable.js';
-import { Toast } from '../../services/Toast.js';
+import { BaseTable } from './BaseTable.js'
+import { Toast } from '../../services/Toast.js'
 
 export class ReviewTable extends BaseTable {
   constructor() {
-    super();
-    this.editId = null;
-    this.formData = {};
-    this.rowHeight = 53;
-    this.users = [];
-    this.products = [];
-    this.data = { columns: [], rows: [], total: 0 };
+    super()
+    this.editId = null
+    this.formData = {}
+    this.rowHeight = 53
+    this.users = []
+    this.products = []
+    this.data = { columns: [], rows: [], total: 0 }
   }
 
   getTableName() {
-    return 'review';
+    return 'review'
   }
 
   getColumnNames() {
@@ -26,362 +26,393 @@ export class ReviewTable extends BaseTable {
       advantages: 'Достоинства',
       disadvantages: 'Недостатки',
       is_approved: 'Одобрен',
-      created_at: 'Дата создания'
-    };
+      created_at: 'Дата создания',
+    }
   }
 
   // ========== ЗАГРУЗКА ДАННЫХ ==========
   async load(page = 1, search = '') {
-    this.currentPage = page;
-    this.currentSearch = search;
-    await this.loadData('review', page, search);
-    await this.loadUsers();
-    await this.loadProducts();
+    this.currentPage = page
+    this.currentSearch = search
+    await this.loadData('review', page, search)
+    await this.loadUsers()
+    await this.loadProducts()
   }
 
   async loadData(table, page, search) {
     try {
-      const result = await window.go.main.App.GetTableData(table, page, search, this.perPage);
-      this.data = result;
-      return result;
+      const result = await window.go.main.App.GetTableData(
+        table,
+        page,
+        search,
+        this.perPage,
+      )
+      this.data = result
+      return result
     } catch (error) {
-      Toast.error('Ошибка загрузки данных: ' + error.message);
-      this.data = { columns: [], rows: [], total: 0 };
-      throw error;
+      Toast.error('Ошибка загрузки данных: ' + error.message)
+      this.data = { columns: [], rows: [], total: 0 }
+      throw error
     }
   }
 
   async loadUsers() {
     try {
-      const result = await window.go.main.App.GetTableData('user', 1, '', 1000);
-      this.users = result.rows || [];
+      const result = await window.go.main.App.GetTableData('user', 1, '', 1000)
+      this.users = result.rows || []
     } catch (error) {
-      console.error('Ошибка загрузки пользователей:', error);
-      this.users = [];
+      console.error('Ошибка загрузки пользователей:', error)
+      this.users = []
     }
   }
 
   async loadProducts() {
     try {
-      const result = await window.go.main.App.GetTableData('product', 1, '', 1000);
-      this.products = result.rows || [];
+      const result = await window.go.main.App.GetTableData(
+        'product',
+        1,
+        '',
+        1000,
+      )
+      this.products = result.rows || []
     } catch (error) {
-      console.error('Ошибка загрузки товаров:', error);
-      this.products = [];
+      console.error('Ошибка загрузки товаров:', error)
+      this.products = []
     }
   }
 
   async changePage(page) {
-    this.currentPage = page;
-    await this.load(this.currentPage, this.currentSearch);
-    const { renderTable } = await import('../TableContainer.js');
+    this.currentPage = page
+    await this.load(this.currentPage, this.currentSearch)
+    const { renderTable } = await import('../TableContainer.js')
     await renderTable('review', 'tableContainer', {
       onEdit: (table, id) => console.log('Edit', table, id),
-      onDelete: (table, id) => console.log('Delete', table, id)
-    });
+      onDelete: (table, id) => console.log('Delete', table, id),
+    })
   }
 
   // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
   getUserName(userId) {
-    if (!userId) return '<span class="text-secondary">—</span>';
-    const user = this.users.find(u => u.idUser == userId);
+    if (!userId) return '<span class="text-secondary">—</span>'
+    const user = this.users.find((u) => u.idUser == userId)
     if (user) {
-      return `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.username || String(userId);
+      return (
+        `${user.first_name || ''} ${user.last_name || ''}`.trim() ||
+        user.username ||
+        String(userId)
+      )
     }
-    return String(userId);
+    return String(userId)
   }
 
   getProductName(productId) {
-    if (!productId) return '<span class="text-secondary">—</span>';
-    const product = this.products.find(p => p.product_id == productId);
+    if (!productId) return '<span class="text-secondary">—</span>'
+    const product = this.products.find((p) => p.product_id == productId)
     if (product) {
-      return product.name || String(productId);
+      return product.name || String(productId)
     }
-    return String(productId);
+    return String(productId)
   }
 
   getUserNameForInput(userId) {
-    if (!userId) return '';
-    const user = this.users.find(u => u.idUser == userId);
+    if (!userId) return ''
+    const user = this.users.find((u) => u.idUser == userId)
     if (user) {
-      return `${user.first_name || ''} ${user.last_name || ''} (${user.username || ''})`.trim();
+      return `${user.first_name || ''} ${user.last_name || ''} (${user.username || ''})`.trim()
     }
-    return '';
+    return ''
   }
 
   getProductNameForInput(productId) {
-    if (!productId) return '';
-    const product = this.products.find(p => p.product_id == productId);
+    if (!productId) return ''
+    const product = this.products.find((p) => p.product_id == productId)
     if (product) {
-      return product.name;
+      return product.name
     }
-    return '';
+    return ''
   }
 
   // ========== ПОИСК В МОДАЛКЕ (ПОЛЬЗОВАТЕЛИ) ==========
   filterUsers(searchText) {
-    const dropdown = document.getElementById('userDropdown');
-    if (!dropdown) return;
+    const dropdown = document.getElementById('userDropdown')
+    if (!dropdown) return
 
     if (!searchText || searchText.trim() === '') {
-      dropdown.style.display = 'none';
-      return;
+      dropdown.style.display = 'none'
+      return
     }
 
-    const searchLower = searchText.toLowerCase();
-    const filtered = this.users.filter(user => {
-      const fullName = `${user.first_name || ''} ${user.last_name || ''} ${user.username || ''}`.toLowerCase();
-      return fullName.includes(searchLower);
-    });
+    const searchLower = searchText.toLowerCase()
+    const filtered = this.users.filter((user) => {
+      const fullName =
+        `${user.first_name || ''} ${user.last_name || ''} ${user.username || ''}`.toLowerCase()
+      return fullName.includes(searchLower)
+    })
 
     if (filtered.length === 0) {
-      dropdown.innerHTML = '<div class="p-2 text-secondary" style="padding: 8px 12px;">Ничего не найдено</div>';
-      dropdown.style.display = 'block';
-      return;
+      dropdown.innerHTML =
+        '<div class="p-2 text-secondary" style="padding: 8px 12px;">Ничего не найдено</div>'
+      dropdown.style.display = 'block'
+      return
     }
 
-    dropdown.innerHTML = filtered.map(user => {
-      const displayText = `${user.first_name || ''} ${user.last_name || ''} (${user.username || ''})`.trim();
-      const escapedText = displayText.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-      return `
+    dropdown.innerHTML = filtered
+      .map((user) => {
+        const displayText =
+          `${user.first_name || ''} ${user.last_name || ''} (${user.username || ''})`.trim()
+        const escapedText = displayText
+          .replace(/'/g, "\\'")
+          .replace(/"/g, '&quot;')
+        return `
         <div class="user-dropdown-item" style="padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #374151;" onclick="tables.review.selectUser(${user.idUser}, '${escapedText}')">
           ${displayText}
           <small style="color: #9ca3af; display: block; font-size: 0.75rem;">ID: ${user.idUser}</small>
         </div>
-      `;
-    }).join('');
+      `
+      })
+      .join('')
 
-    dropdown.style.display = 'block';
+    dropdown.style.display = 'block'
 
-    const input = document.getElementById('userSearchInput');
+    const input = document.getElementById('userSearchInput')
     if (input) {
-      const rect = input.getBoundingClientRect();
-      dropdown.style.position = 'absolute';
-      dropdown.style.top = `${rect.bottom + window.scrollY}px`;
-      dropdown.style.left = `${rect.left + window.scrollX}px`;
-      dropdown.style.width = `${rect.width}px`;
+      const rect = input.getBoundingClientRect()
+      dropdown.style.position = 'absolute'
+      dropdown.style.top = `${rect.bottom + window.scrollY}px`
+      dropdown.style.left = `${rect.left + window.scrollX}px`
+      dropdown.style.width = `${rect.width}px`
     }
 
-    dropdown.querySelectorAll('.user-dropdown-item').forEach(item => {
+    dropdown.querySelectorAll('.user-dropdown-item').forEach((item) => {
       item.addEventListener('mouseenter', () => {
-        item.style.backgroundColor = '#374151';
-      });
+        item.style.backgroundColor = '#374151'
+      })
       item.addEventListener('mouseleave', () => {
-        item.style.backgroundColor = 'transparent';
-      });
-    });
+        item.style.backgroundColor = 'transparent'
+      })
+    })
   }
 
   selectUser(userId, displayName) {
-    const input = document.getElementById('userSearchInput');
-    const hiddenInput = document.getElementById('selectedUserId');
-    const dropdown = document.getElementById('userDropdown');
+    const input = document.getElementById('userSearchInput')
+    const hiddenInput = document.getElementById('selectedUserId')
+    const dropdown = document.getElementById('userDropdown')
 
-    if (input) input.value = displayName;
-    if (hiddenInput) hiddenInput.value = userId;
-    if (dropdown) dropdown.style.display = 'none';
+    if (input) input.value = displayName
+    if (hiddenInput) hiddenInput.value = userId
+    if (dropdown) dropdown.style.display = 'none'
   }
 
   // ========== ПОИСК В МОДАЛКЕ (ТОВАРЫ) ==========
   filterProducts(searchText) {
-    const dropdown = document.getElementById('productDropdown');
-    if (!dropdown) return;
+    const dropdown = document.getElementById('productDropdown')
+    if (!dropdown) return
 
     if (!searchText || searchText.trim() === '') {
-      dropdown.style.display = 'none';
-      return;
+      dropdown.style.display = 'none'
+      return
     }
 
-    const searchLower = searchText.toLowerCase();
-    const filtered = this.products.filter(product => {
-      const productName = (product.name || '').toLowerCase();
-      const productId = String(product.product_id || '');
-      return productName.includes(searchLower) || productId.includes(searchLower);
-    });
+    const searchLower = searchText.toLowerCase()
+    const filtered = this.products.filter((product) => {
+      const productName = (product.name || '').toLowerCase()
+      const productId = String(product.product_id || '')
+      return (
+        productName.includes(searchLower) || productId.includes(searchLower)
+      )
+    })
 
     if (filtered.length === 0) {
-      dropdown.innerHTML = '<div class="p-2 text-secondary" style="padding: 8px 12px;">Ничего не найдено</div>';
-      dropdown.style.display = 'block';
-      return;
+      dropdown.innerHTML =
+        '<div class="p-2 text-secondary" style="padding: 8px 12px;">Ничего не найдено</div>'
+      dropdown.style.display = 'block'
+      return
     }
 
-    dropdown.innerHTML = filtered.map(product => {
-      const displayText = product.name || `Товар #${product.product_id}`;
-      const escapedText = displayText.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-      return `
+    dropdown.innerHTML = filtered
+      .map((product) => {
+        const displayText = product.name || `Товар #${product.product_id}`
+        const escapedText = displayText
+          .replace(/'/g, "\\'")
+          .replace(/"/g, '&quot;')
+        return `
         <div class="product-dropdown-item" style="padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #374151;" onclick="tables.review.selectProduct(${product.product_id}, '${escapedText}')">
           ${displayText}
           <small style="color: #9ca3af; display: block; font-size: 0.75rem;">ID: ${product.product_id}</small>
         </div>
-      `;
-    }).join('');
+      `
+      })
+      .join('')
 
-    dropdown.style.display = 'block';
+    dropdown.style.display = 'block'
 
-    const input = document.getElementById('productSearchInput');
+    const input = document.getElementById('productSearchInput')
     if (input) {
-      const rect = input.getBoundingClientRect();
-      dropdown.style.position = 'absolute';
-      dropdown.style.top = `${rect.bottom + window.scrollY}px`;
-      dropdown.style.left = `${rect.left + window.scrollX}px`;
-      dropdown.style.width = `${rect.width}px`;
+      const rect = input.getBoundingClientRect()
+      dropdown.style.position = 'absolute'
+      dropdown.style.top = `${rect.bottom + window.scrollY}px`
+      dropdown.style.left = `${rect.left + window.scrollX}px`
+      dropdown.style.width = `${rect.width}px`
     }
 
-    dropdown.querySelectorAll('.product-dropdown-item').forEach(item => {
+    dropdown.querySelectorAll('.product-dropdown-item').forEach((item) => {
       item.addEventListener('mouseenter', () => {
-        item.style.backgroundColor = '#374151';
-      });
+        item.style.backgroundColor = '#374151'
+      })
       item.addEventListener('mouseleave', () => {
-        item.style.backgroundColor = 'transparent';
-      });
-    });
+        item.style.backgroundColor = 'transparent'
+      })
+    })
   }
 
   selectProduct(productId, displayName) {
-    const input = document.getElementById('productSearchInput');
-    const hiddenInput = document.getElementById('selectedProductId');
-    const dropdown = document.getElementById('productDropdown');
+    const input = document.getElementById('productSearchInput')
+    const hiddenInput = document.getElementById('selectedProductId')
+    const dropdown = document.getElementById('productDropdown')
 
-    if (input) input.value = displayName;
-    if (hiddenInput) hiddenInput.value = productId;
-    if (dropdown) dropdown.style.display = 'none';
+    if (input) input.value = displayName
+    if (hiddenInput) hiddenInput.value = productId
+    if (dropdown) dropdown.style.display = 'none'
   }
 
   // ========== ФУНКЦИИ ДАТЫ ==========
   formatDateTime(dateString) {
-    if (!dateString) return '<span class="text-secondary">—</span>';
+    if (!dateString) return '<span class="text-secondary">—</span>'
     try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('ru-RU') + ' ' +
-          date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+      const date = new Date(dateString)
+      return (
+        date.toLocaleDateString('ru-RU') +
+        ' ' +
+        date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+      )
     } catch (e) {
-      return String(dateString);
+      return String(dateString)
     }
   }
 
   formatDateTimeForInput(dateString) {
-    if (!dateString) return '';
+    if (!dateString) return ''
     try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return '';
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      const hours = String(date.getHours()).padStart(2, '0');
-      const minutes = String(date.getMinutes()).padStart(2, '0');
-      return `${year}-${month}-${day}T${hours}:${minutes}`;
+      const date = new Date(dateString)
+      if (isNaN(date.getTime())) return ''
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      const hours = String(date.getHours()).padStart(2, '0')
+      const minutes = String(date.getMinutes()).padStart(2, '0')
+      return `${year}-${month}-${day}T${hours}:${minutes}`
     } catch (e) {
-      return '';
+      return ''
     }
   }
 
   // ========== CRUD ОПЕРАЦИИ ==========
   async createReview(data) {
     try {
-      const result = await window.go.main.App.CreateReview(data);
+      const result = await window.go.main.App.CreateReview(data)
       if (result.success) {
-        this.closeModal();
-        await this.load(this.currentPage, this.currentSearch);
-        Toast.success('Отзыв успешно создан');
-        const { renderTable } = await import('../TableContainer.js');
+        this.closeModal()
+        await this.load(this.currentPage, this.currentSearch)
+        Toast.success('Отзыв успешно создан')
+        const { renderTable } = await import('../TableContainer.js')
         await renderTable('review', 'tableContainer', {
           onEdit: (table, id) => console.log('Edit', table, id),
-          onDelete: (table, id) => console.log('Delete', table, id)
-        });
+          onDelete: (table, id) => console.log('Delete', table, id),
+        })
       } else {
-        Toast.error(result.message);
+        Toast.error(result.message)
       }
     } catch (error) {
-      Toast.error('Ошибка: ' + error.message);
+      Toast.error('Ошибка: ' + error.message)
     }
   }
 
   async updateReview(id, data) {
     try {
-      const result = await window.go.main.App.UpdateReview(id, data);
+      const result = await window.go.main.App.UpdateReview(id, data)
       if (result.success) {
-        this.closeModal();
-        await this.load(this.currentPage, this.currentSearch);
-        Toast.success('Отзыв успешно обновлён');
-        const { renderTable } = await import('../TableContainer.js');
+        this.closeModal()
+        await this.load(this.currentPage, this.currentSearch)
+        Toast.success('Отзыв успешно обновлён')
+        const { renderTable } = await import('../TableContainer.js')
         await renderTable('review', 'tableContainer', {
           onEdit: (table, id) => console.log('Edit', table, id),
-          onDelete: (table, id) => console.log('Delete', table, id)
-        });
+          onDelete: (table, id) => console.log('Delete', table, id),
+        })
       } else {
-        Toast.error(result.message);
+        Toast.error(result.message)
       }
     } catch (error) {
-      Toast.error('Ошибка: ' + error.message);
+      Toast.error('Ошибка: ' + error.message)
     }
   }
 
   async deleteReview(id) {
     try {
-      const result = await window.go.main.App.DeleteReview(id);
+      const result = await window.go.main.App.DeleteReview(id)
       if (result.success) {
-        await this.load(this.currentPage, this.currentSearch);
-        Toast.success('Отзыв успешно удалён');
-        const { renderTable } = await import('../TableContainer.js');
+        await this.load(this.currentPage, this.currentSearch)
+        Toast.success('Отзыв успешно удалён')
+        const { renderTable } = await import('../TableContainer.js')
         await renderTable('review', 'tableContainer', {
           onEdit: (table, id) => console.log('Edit', table, id),
-          onDelete: (table, id) => console.log('Delete', table, id)
-        });
+          onDelete: (table, id) => console.log('Delete', table, id),
+        })
       } else {
-        Toast.error(result.message);
+        Toast.error(result.message)
       }
     } catch (error) {
-      Toast.error('Ошибка: ' + error.message);
+      Toast.error('Ошибка: ' + error.message)
     }
   }
 
   // ========== ФУНКЦИИ ВАЛИДАЦИИ ==========
   validateForm(data) {
-    const errors = [];
+    const errors = []
     if (!data.product_id || data.product_id === '') {
-      errors.push('Товар обязателен');
+      errors.push('Товар обязателен')
     }
     if (!data.user_id || data.user_id === '') {
-      errors.push('Пользователь обязателен');
+      errors.push('Пользователь обязателен')
     }
     if (!data.rating || data.rating < 1 || data.rating > 5) {
-      errors.push('Рейтинг должен быть от 1 до 5');
+      errors.push('Рейтинг должен быть от 1 до 5')
     }
-    return errors;
+    return errors
   }
 
   // ========== МОДАЛЬНЫЕ ОКНА ==========
   openCreateForm() {
-    this.editId = null;
-    this.formData = {};
-    this.renderModal();
+    this.editId = null
+    this.formData = {}
+    this.renderModal()
   }
 
   async openEditForm(id) {
-    this.editId = id;
-    const data = await this.loadReviewData(id);
+    this.editId = id
+    const data = await this.loadReviewData(id)
     if (data) {
-      this.formData = data;
-      this.renderModal();
+      this.formData = data
+      this.renderModal()
     }
   }
 
   async loadReviewData(id) {
     try {
-      const data = await window.go.main.App.GetReview(id);
-      return data;
+      const data = await window.go.main.App.GetReview(id)
+      return data
     } catch (error) {
-      Toast.error('Ошибка загрузки данных отзыва: ' + error.message);
-      return null;
+      Toast.error('Ошибка загрузки данных отзыва: ' + error.message)
+      return null
     }
   }
 
   showDeleteModal(id) {
-    let modalContainer = document.getElementById('modalContainer');
+    let modalContainer = document.getElementById('modalContainer')
     if (!modalContainer) {
-      modalContainer = document.createElement('div');
-      modalContainer.id = 'modalContainer';
-      document.body.appendChild(modalContainer);
+      modalContainer = document.createElement('div')
+      modalContainer.id = 'modalContainer'
+      document.body.appendChild(modalContainer)
     }
 
     const modalHtml = `
@@ -405,34 +436,34 @@ export class ReviewTable extends BaseTable {
           </div>
         </div>
       </div>
-    `;
+    `
 
-    modalContainer.innerHTML = modalHtml;
+    modalContainer.innerHTML = modalHtml
   }
 
   closeDeleteModal() {
-    document.getElementById('modalContainer').innerHTML = '';
+    document.getElementById('modalContainer').innerHTML = ''
   }
 
   async confirmDelete(id) {
-    this.closeDeleteModal();
-    await this.deleteReview(id);
+    this.closeDeleteModal()
+    await this.deleteReview(id)
   }
 
   closeModal() {
-    document.getElementById('modalContainer').innerHTML = '';
+    document.getElementById('modalContainer').innerHTML = ''
   }
 
   renderModal() {
-    const title = this.editId ? 'Редактировать отзыв' : 'Новый отзыв';
+    const title = this.editId ? 'Редактировать отзыв' : 'Новый отзыв'
 
     const ratingOptions = [
       { value: 5, label: '5 - Отлично' },
       { value: 4, label: '4 - Хорошо' },
       { value: 3, label: '3 - Средне' },
       { value: 2, label: '2 - Плохо' },
-      { value: 1, label: '1 - Ужасно' }
-    ];
+      { value: 1, label: '1 - Ужасно' },
+    ]
 
     const modalHtml = `
       <div class="modal show" style="display: block; background: rgba(0,0,0,0.7);">
@@ -467,7 +498,7 @@ export class ReviewTable extends BaseTable {
                     <label class="form-label">Рейтинг <span class="text-danger">*</span></label>
                     <select name="rating" class="form-select" required>
                       <option value="">— Выберите рейтинг —</option>
-                      ${ratingOptions.map(opt => `<option value="${opt.value}" ${this.formData.rating == opt.value ? 'selected' : ''}>${opt.label}</option>`).join('')}
+                      ${ratingOptions.map((opt) => `<option value="${opt.value}" ${this.formData.rating == opt.value ? 'selected' : ''}>${opt.label}</option>`).join('')}
                     </select>
                   </div>
                   
@@ -509,107 +540,118 @@ export class ReviewTable extends BaseTable {
           </div>
         </div>
       </div>
-    `;
-    document.getElementById('modalContainer').innerHTML = modalHtml;
+    `
+    document.getElementById('modalContainer').innerHTML = modalHtml
 
     setTimeout(() => {
       const handleClickOutside = (e) => {
-        const userDropdown = document.getElementById('userDropdown');
-        const userInput = document.getElementById('userSearchInput');
-        const productDropdown = document.getElementById('productDropdown');
-        const productInput = document.getElementById('productSearchInput');
+        const userDropdown = document.getElementById('userDropdown')
+        const userInput = document.getElementById('userSearchInput')
+        const productDropdown = document.getElementById('productDropdown')
+        const productInput = document.getElementById('productSearchInput')
 
-        if (userDropdown && userInput && !userInput.contains(e.target) && !userDropdown.contains(e.target)) {
-          userDropdown.style.display = 'none';
+        if (
+          userDropdown &&
+          userInput &&
+          !userInput.contains(e.target) &&
+          !userDropdown.contains(e.target)
+        ) {
+          userDropdown.style.display = 'none'
         }
-        if (productDropdown && productInput && !productInput.contains(e.target) && !productDropdown.contains(e.target)) {
-          productDropdown.style.display = 'none';
+        if (
+          productDropdown &&
+          productInput &&
+          !productInput.contains(e.target) &&
+          !productDropdown.contains(e.target)
+        ) {
+          productDropdown.style.display = 'none'
         }
-      };
-      document.addEventListener('click', handleClickOutside);
-    }, 100);
+      }
+      document.addEventListener('click', handleClickOutside)
+    }, 100)
   }
 
   async saveForm(e) {
-    e.preventDefault();
-    const form = e.target;
-    const formData = new FormData(form);
-    const data = Object.fromEntries(formData.entries());
+    e.preventDefault()
+    const form = e.target
+    const formData = new FormData(form)
+    const data = Object.fromEntries(formData.entries())
 
-    const hiddenUserId = document.getElementById('selectedUserId')?.value;
-    const hiddenProductId = document.getElementById('selectedProductId')?.value;
+    const hiddenUserId = document.getElementById('selectedUserId')?.value
+    const hiddenProductId = document.getElementById('selectedProductId')?.value
 
     if (hiddenUserId && !data.user_id) {
-      data.user_id = hiddenUserId;
+      data.user_id = hiddenUserId
     }
     if (hiddenProductId && !data.product_id) {
-      data.product_id = hiddenProductId;
+      data.product_id = hiddenProductId
     }
 
     for (let key in data) {
-      if (data[key] === '') data[key] = null;
+      if (data[key] === '') data[key] = null
     }
 
-    const errors = this.validateForm(data);
+    const errors = this.validateForm(data)
     if (errors.length > 0) {
-      Toast.error(errors.join('<br>'));
-      return;
+      Toast.error(errors.join('<br>'))
+      return
     }
 
     if (this.editId) {
-      await this.updateReview(this.editId, data);
+      await this.updateReview(this.editId, data)
     } else {
-      await this.createReview(data);
+      await this.createReview(data)
     }
   }
 
   // ========== ФОРМАТИРОВАНИЕ ЯЧЕЕК ТАБЛИЦЫ ==========
   formatCellValue(column, value) {
-    if (value === null || value === undefined) return '<span class="text-secondary">—</span>';
+    if (value === null || value === undefined)
+      return '<span class="text-secondary">—</span>'
 
-    if (column === 'user_id') return this.getUserName(value);
-    if (column === 'product_id') return this.getProductName(value);
-    if (column === 'created_at') return this.formatDateTime(value);
-    if (column === 'is_approved') return value ? 'Да' : 'Нет';
-    if (column === 'rating') return `${value} ★`;
+    if (column === 'user_id') return this.getUserName(value)
+    if (column === 'product_id') return this.getProductName(value)
+    if (column === 'created_at') return this.formatDateTime(value)
+    if (column === 'is_approved') return value ? 'Да' : 'Нет'
+    if (column === 'rating') return `${value} ★`
 
     if (column === 'comment' && value && value.length > 50) {
-      return `<span title="${value}">${value.substring(0, 50)}…</span>`;
+      return `<span title="${value}">${value.substring(0, 50)}…</span>`
     }
     if (column === 'advantages' && value && value.length > 30) {
-      return `<span title="${value}">${value.substring(0, 30)}…</span>`;
+      return `<span title="${value}">${value.substring(0, 30)}…</span>`
     }
     if (column === 'disadvantages' && value && value.length > 30) {
-      return `<span title="${value}">${value.substring(0, 30)}…</span>`;
+      return `<span title="${value}">${value.substring(0, 30)}…</span>`
     }
 
-    return String(value);
+    return String(value)
   }
 
   renderRow(row, columns) {
     return `
       <tr>
-        ${columns.map(col => `<td>${this.formatCellValue(col, row[col])}</td>`).join('')}
+        ${columns.map((col) => `<td>${this.formatCellValue(col, row[col])}</td>`).join('')}
         <td class="text-end">
           <button class="btn btn-edit" onclick="tables.review.openEditForm(${row.review_id})">Изменить</button>
           <button class="btn btn-delete" onclick="tables.review.showDeleteModal(${row.review_id})">Удалить</button>
         </td>
       </tr>
-    `;
+    `
   }
 
   // ========== ОСНОВНОЙ RENDER ==========
   render(options = {}) {
-    const { onSearch, onPageChange } = options;
+    const { onSearch, onPageChange } = options
 
     if (!this.data.rows || this.data.rows.length === 0) {
-      return this.renderEmptyState('Отзывы');
+      return this.renderEmptyState('Отзывы')
     }
 
-    const columnNames = this.getColumnNames();
-    const columns = (this.data && this.data.columns) || Object.keys(columnNames);
-    const displayRows = [...this.data.rows];
-    while (displayRows.length < this.perPage) displayRows.push(null);
+    const columnNames = this.getColumnNames()
+    const columns = (this.data && this.data.columns) || Object.keys(columnNames)
+    const displayRows = [...this.data.rows]
+    while (displayRows.length < this.perPage) displayRows.push(null)
 
     return `
       <div class="table-card">
@@ -628,27 +670,29 @@ export class ReviewTable extends BaseTable {
           <table class="table">
             <thead>
               <tr>
-                ${columns.map(col => `<th style="text-align: left;">${columnNames[col] || col}</th>`).join('')}
+                ${columns.map((col) => `<th style="text-align: left;">${columnNames[col] || col}</th>`).join('')}
                 <th style="text-align: right;">Действия</th>
               </tr>
             </thead>
             <tbody>
-              ${displayRows.map(row => {
-      if (!row) {
-        return `<tr>${columns.map(() => '<td>&nbsp;</td>').join('')}<td>&nbsp;</td></tr>`;
-      }
-      return this.renderRow(row, columns);
-    }).join('')}
+              ${displayRows
+                .map((row) => {
+                  if (!row) {
+                    return `<tr>${columns.map(() => '<td>&nbsp;</td>').join('')}<td>&nbsp;</td></tr>`
+                  }
+                  return this.renderRow(row, columns)
+                })
+                .join('')}
             </tbody>
           </table>
         </div>
 
         ${this.renderPagination(onPageChange)}
       </div>
-    `;
+    `
   }
 }
 
 // ========== РЕГИСТРАЦИЯ ТАБЛИЦЫ ==========
-if (!window.tables) window.tables = {};
-window.tables.review = new ReviewTable();
+if (!window.tables) window.tables = {}
+window.tables.review = new ReviewTable()

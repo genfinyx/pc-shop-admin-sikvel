@@ -1,18 +1,18 @@
-import { BaseTable } from './BaseTable.js';
-import { Toast } from '../../services/Toast.js';
-import { Session } from '../../services/Session.js';
+import { BaseTable } from './BaseTable.js'
+import { Toast } from '../../services/Toast.js'
+import { Session } from '../../services/Session.js'
 
 export class UserTable extends BaseTable {
   constructor() {
-    super();
-    this.editId = null;
-    this.formData = {};
-    this.rowHeight = 53;
-    this.tableContainer = null;
+    super()
+    this.editId = null
+    this.formData = {}
+    this.rowHeight = 53
+    this.tableContainer = null
   }
 
   getTableName() {
-    return 'user';
+    return 'user'
   }
 
   getColumnNames() {
@@ -26,206 +26,218 @@ export class UserTable extends BaseTable {
       first_name: 'Имя',
       last_name: 'Фамилия',
       middle_name: 'Отчество',
-      is_active: 'Активен'
-    };
+      is_active: 'Активен',
+    }
   }
 
   async handleSearch(event) {
-    if (event) event.preventDefault();
-    const input = document.getElementById('searchInput');
-    this.currentSearch = input ? input.value : '';
-    this.currentPage = 1;
-    await this.load(this.currentPage, this.currentSearch);
-    const { renderTable } = await import('../TableContainer.js');
+    if (event) event.preventDefault()
+    const input = document.getElementById('searchInput')
+    this.currentSearch = input ? input.value : ''
+    this.currentPage = 1
+    await this.load(this.currentPage, this.currentSearch)
+    const { renderTable } = await import('../TableContainer.js')
     await renderTable('user', 'tableContainer', {
       onEdit: (table, id) => console.log('Edit', table, id),
-      onDelete: (table, id) => console.log('Delete', table, id)
-    });
+      onDelete: (table, id) => console.log('Delete', table, id),
+    })
   }
 
   async handleSearchClear() {
-    this.currentSearch = '';
-    this.currentPage = 1;
-    const input = document.getElementById('searchInput');
-    if (input) input.value = '';
-    await this.load(this.currentPage, this.currentSearch);
-    const { renderTable } = await import('../TableContainer.js');
+    this.currentSearch = ''
+    this.currentPage = 1
+    const input = document.getElementById('searchInput')
+    if (input) input.value = ''
+    await this.load(this.currentPage, this.currentSearch)
+    const { renderTable } = await import('../TableContainer.js')
     await renderTable('user', 'tableContainer', {
       onEdit: (table, id) => console.log('Edit', table, id),
-      onDelete: (table, id) => console.log('Delete', table, id)
-    });
+      onDelete: (table, id) => console.log('Delete', table, id),
+    })
   }
 
   async load(page = 1, search = '') {
-    this.currentPage = page;
-    this.currentSearch = search;
-    await this.loadData('user', page, search);
+    this.currentPage = page
+    this.currentSearch = search
+    await this.loadData('user', page, search)
   }
 
   async loadData(table, page, search) {
     try {
-      const result = await window.go.main.App.GetTableData(table, page, search, this.perPage);
-      this.data = result;
-      return result;
+      const result = await window.go.main.App.GetTableData(
+        table,
+        page,
+        search,
+        this.perPage,
+      )
+      this.data = result
+      return result
     } catch (error) {
-      Toast.error('Ошибка загрузки данных: ' + error.message);
-      this.data = { columns: [], rows: [], total: 0 };
-      throw error;
+      Toast.error('Ошибка загрузки данных: ' + error.message)
+      this.data = { columns: [], rows: [], total: 0 }
+      throw error
     }
   }
 
   async changePage(page) {
-    this.currentPage = page;
-    await this.load(this.currentPage, this.currentSearch);
-    const { renderTable } = await import('../TableContainer.js');
+    this.currentPage = page
+    await this.load(this.currentPage, this.currentSearch)
+    const { renderTable } = await import('../TableContainer.js')
     await renderTable('user', 'tableContainer', {
       onEdit: (table, id) => console.log('Edit', table, id),
-      onDelete: (table, id) => console.log('Delete', table, id)
-    });
+      onDelete: (table, id) => console.log('Delete', table, id),
+    })
   }
 
   formatDateTime(dateString) {
-    if (!dateString) return '<span class="text-secondary">—</span>';
+    if (!dateString) return '<span class="text-secondary">—</span>'
     try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('ru-RU') + ' ' +
-          date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+      const date = new Date(dateString)
+      return (
+        date.toLocaleDateString('ru-RU') +
+        ' ' +
+        date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+      )
     } catch (e) {
-      return String(dateString);
+      return String(dateString)
     }
   }
 
   formatDateTimeForInput(dateString) {
-    if (!dateString) return '';
+    if (!dateString) return ''
     try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return '';
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      const hours = String(date.getHours()).padStart(2, '0');
-      const minutes = String(date.getMinutes()).padStart(2, '0');
-      return `${year}-${month}-${day}T${hours}:${minutes}`;
+      const date = new Date(dateString)
+      if (isNaN(date.getTime())) return ''
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      const hours = String(date.getHours()).padStart(2, '0')
+      const minutes = String(date.getMinutes()).padStart(2, '0')
+      return `${year}-${month}-${day}T${hours}:${minutes}`
     } catch (e) {
-      return '';
+      return ''
     }
   }
 
   validateForm(data) {
-    const errors = [];
-    if (!data.username?.trim()) errors.push('Логин обязателен');
+    const errors = []
+    if (!data.username?.trim()) errors.push('Логин обязателен')
     if (!data.email?.trim()) {
-      errors.push('Email обязателен');
+      errors.push('Email обязателен')
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
-      errors.push('Неверный формат email');
+      errors.push('Неверный формат email')
     }
     if (data.phone && !/^[\+\d\s\-\(\)]{10,}$/.test(data.phone)) {
-      errors.push('Неверный формат телефона');
+      errors.push('Неверный формат телефона')
     }
-    if (!data.first_name?.trim()) errors.push('Имя обязательно');
-    if (!data.last_name?.trim()) errors.push('Фамилия обязательна');
-    if (!this.editId && !data.password_hash?.trim()) errors.push('Пароль обязателен');
-    return errors;
+    if (!data.first_name?.trim()) errors.push('Имя обязательно')
+    if (!data.last_name?.trim()) errors.push('Фамилия обязательна')
+    if (!this.editId && !data.password_hash?.trim())
+      errors.push('Пароль обязателен')
+    return errors
   }
 
   async createUser(data) {
     try {
-      const result = await window.go.main.App.CreateUser(data);
+      const result = await window.go.main.App.CreateUser(data)
       if (result.success) {
-        this.closeModal();
-        await this.load(this.currentPage, this.currentSearch);
-        Toast.success('Пользователь успешно создан');
-        const { renderTable } = await import('../TableContainer.js');
+        this.closeModal()
+        await this.load(this.currentPage, this.currentSearch)
+        Toast.success('Пользователь успешно создан')
+        const { renderTable } = await import('../TableContainer.js')
         await renderTable('user', 'tableContainer', {
           onEdit: (table, id) => console.log('Edit', table, id),
-          onDelete: (table, id) => console.log('Delete', table, id)
-        });
+          onDelete: (table, id) => console.log('Delete', table, id),
+        })
       } else {
-        Toast.error(result.message);
+        Toast.error(result.message)
       }
     } catch (error) {
-      Toast.error('Ошибка: ' + error.message);
+      Toast.error('Ошибка: ' + error.message)
     }
   }
 
   async updateUser(id, data) {
     try {
-      const result = await window.go.main.App.UpdateUser(id, data);
+      const result = await window.go.main.App.UpdateUser(id, data)
       if (result.success) {
-        this.closeModal();
-        await this.load(this.currentPage, this.currentSearch);
-        Toast.success('Пользователь успешно обновлён');
-        const { renderTable } = await import('../TableContainer.js');
+        this.closeModal()
+        await this.load(this.currentPage, this.currentSearch)
+        Toast.success('Пользователь успешно обновлён')
+        const { renderTable } = await import('../TableContainer.js')
         await renderTable('user', 'tableContainer', {
           onEdit: (table, id) => console.log('Edit', table, id),
-          onDelete: (table, id) => console.log('Delete', table, id)
-        });
+          onDelete: (table, id) => console.log('Delete', table, id),
+        })
       } else {
-        Toast.error(result.message);
+        Toast.error(result.message)
       }
     } catch (error) {
-      Toast.error('Ошибка: ' + error.message);
+      Toast.error('Ошибка: ' + error.message)
     }
   }
 
   async deleteUser(id) {
     try {
-      const result = await window.go.main.App.DeleteUser(id);
+      const result = await window.go.main.App.DeleteUser(id)
       if (result.success) {
-        await this.load(this.currentPage, this.currentSearch);
-        Toast.success('Пользователь успешно удалён');
-        const { renderTable } = await import('../TableContainer.js');
+        await this.load(this.currentPage, this.currentSearch)
+        Toast.success('Пользователь успешно удалён')
+        const { renderTable } = await import('../TableContainer.js')
         await renderTable('user', 'tableContainer', {
           onEdit: (table, id) => console.log('Edit', table, id),
-          onDelete: (table, id) => console.log('Delete', table, id)
-        });
+          onDelete: (table, id) => console.log('Delete', table, id),
+        })
       } else {
-        Toast.error(result.message);
+        Toast.error(result.message)
       }
     } catch (error) {
-      Toast.error('Ошибка: ' + error.message);
+      Toast.error('Ошибка: ' + error.message)
     }
   }
 
   openCreateForm() {
-    this.editId = null;
-    this.formData = {};
-    this.renderModal();
+    this.editId = null
+    this.formData = {}
+    this.renderModal()
   }
 
   async openEditForm(id) {
-    this.editId = id;
-    const data = await this.loadUserData(id);
+    this.editId = id
+    const data = await this.loadUserData(id)
     if (data) {
-      this.formData = data;
-      this.renderModal();
+      this.formData = data
+      this.renderModal()
     }
   }
 
   async loadUserData(id) {
     try {
-      return await window.go.main.App.GetUser(id);
+      return await window.go.main.App.GetUser(id)
     } catch (error) {
-      Toast.error('Ошибка загрузки данных пользователя: ' + error.message);
-      return null;
+      Toast.error('Ошибка загрузки данных пользователя: ' + error.message)
+      return null
     }
   }
 
   showDeleteModal(id) {
-    const currentUserId = Session.getUserId();
+    const currentUserId = Session.getUserId()
     if (currentUserId == id) {
-      Toast.error('Вы не можете удалить свой собственный аккаунт!');
-      return;
+      Toast.error('Вы не можете удалить свой собственный аккаунт!')
+      return
     }
 
-    const user = this.data.rows?.find(row => row.idUser == id);
-    const userName = user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.username : `#${id}`;
+    const user = this.data.rows?.find((row) => row.idUser == id)
+    const userName = user
+      ? `${user.first_name || ''} ${user.last_name || ''}`.trim() ||
+        user.username
+      : `#${id}`
 
-    let modalContainer = document.getElementById('modalContainer');
+    let modalContainer = document.getElementById('modalContainer')
     if (!modalContainer) {
-      modalContainer = document.createElement('div');
-      modalContainer.id = 'modalContainer';
-      document.body.appendChild(modalContainer);
+      modalContainer = document.createElement('div')
+      modalContainer.id = 'modalContainer'
+      document.body.appendChild(modalContainer)
     }
 
     const modalHtml = `
@@ -247,39 +259,43 @@ export class UserTable extends BaseTable {
           </div>
         </div>
       </div>
-    `;
+    `
 
-    modalContainer.innerHTML = modalHtml;
+    modalContainer.innerHTML = modalHtml
   }
 
   closeDeleteModal() {
-    document.getElementById('modalContainer').innerHTML = '';
+    document.getElementById('modalContainer').innerHTML = ''
   }
 
   async confirmDelete(id) {
-    this.closeDeleteModal();
-    await this.deleteUser(id);
+    this.closeDeleteModal()
+    await this.deleteUser(id)
   }
 
   closeModal() {
-    document.getElementById('modalContainer').innerHTML = '';
+    document.getElementById('modalContainer').innerHTML = ''
   }
 
   renderModal() {
-    const title = this.editId ? 'Редактировать пользователя' : 'Новый пользователь';
+    const title = this.editId
+      ? 'Редактировать пользователя'
+      : 'Новый пользователь'
 
-    const passwordField = this.editId ? `
+    const passwordField = this.editId
+      ? `
       <div class="col-md-6 mb-3">
         <label class="form-label">Новый пароль</label>
         <input type="password" name="password_hash" class="form-control" placeholder="Оставьте пустым, чтобы не менять">
         <span class="text-secondary">Оставьте пустым, чтобы не менять пароль</span>
       </div>
-    ` : `
+    `
+      : `
       <div class="col-md-6 mb-3">
         <label class="form-label">Пароль <span class="text-danger">*</span></label>
         <input type="password" name="password_hash" class="form-control" required>
       </div>
-    `;
+    `
 
     const modalHtml = `
       <div class="modal show" style="display: block; background: rgba(0,0,0,0.7);">
@@ -358,81 +374,87 @@ export class UserTable extends BaseTable {
           </div>
         </div>
       </div>
-    `;
+    `
 
-    document.getElementById('modalContainer').innerHTML = modalHtml;
+    document.getElementById('modalContainer').innerHTML = modalHtml
   }
 
   async saveForm(e) {
-    e.preventDefault();
-    const form = e.target;
-    const formData = new FormData(form);
-    const data = Object.fromEntries(formData.entries());
+    e.preventDefault()
+    const form = e.target
+    const formData = new FormData(form)
+    const data = Object.fromEntries(formData.entries())
 
-    if (this.editId && (!data.password_hash?.trim())) {
-      delete data.password_hash;
+    if (this.editId && !data.password_hash?.trim()) {
+      delete data.password_hash
     }
 
     for (let key in data) {
-      if (data[key] === '') data[key] = null;
+      if (data[key] === '') data[key] = null
     }
 
-    const errors = this.validateForm(data);
+    const errors = this.validateForm(data)
     if (errors.length > 0) {
-      Toast.error(errors.join('<br>'));
-      return;
+      Toast.error(errors.join('<br>'))
+      return
     }
 
     if (this.editId) {
-      await this.updateUser(this.editId, data);
+      await this.updateUser(this.editId, data)
     } else {
-      await this.createUser(data);
+      await this.createUser(data)
     }
   }
 
   formatCellValue(column, value) {
-    if (value === null || value === undefined) return '<span class="text-secondary">—</span>';
+    if (value === null || value === undefined)
+      return '<span class="text-secondary">—</span>'
     if (column === 'reg_date' && value) {
-      return this.formatDateTime(value);
+      return this.formatDateTime(value)
     }
-    if (column === 'is_active') return value ? 'Да' : 'Нет';
+    if (column === 'is_active') return value ? 'Да' : 'Нет'
     if (column === 'role') {
-      const roles = { Customer: 'Покупатель', Employee: 'Сотрудник', Administrator: 'Администратор' };
-      return roles[value] || value;
+      const roles = {
+        Customer: 'Покупатель',
+        Employee: 'Сотрудник',
+        Administrator: 'Администратор',
+      }
+      return roles[value] || value
     }
-    return String(value);
+    return String(value)
   }
 
   renderRow(row, visibleColumns) {
-    const currentUserId = Session.getUserId();
-    const isSelf = currentUserId && currentUserId == row.idUser;
+    const currentUserId = Session.getUserId()
+    const isSelf = currentUserId && currentUserId == row.idUser
 
     return `
       <tr>
-        ${visibleColumns.map(col => `<td>${this.formatCellValue(col, row[col])}</td>`).join('')}
+        ${visibleColumns.map((col) => `<td>${this.formatCellValue(col, row[col])}</td>`).join('')}
         <td class="text-end">
           <button class="btn btn-edit" onclick="tables.user.openEditForm(${row.idUser})">Изменить</button>
-          ${isSelf
-        ? `<button class="btn btn-secondary" disabled>Удалить</button>`
-        : `<button class="btn btn-delete" onclick="tables.user.showDeleteModal(${row.idUser})">Удалить</button>`
-    }
+          ${
+            isSelf
+              ? `<button class="btn btn-secondary" disabled>Удалить</button>`
+              : `<button class="btn btn-delete" onclick="tables.user.showDeleteModal(${row.idUser})">Удалить</button>`
+          }
         </td>
       </tr>
-    `;
+    `
   }
 
   render(options = {}) {
-    const { onSearch, onPageChange } = options;
+    const { onSearch, onPageChange } = options
 
     if (!this.data.rows || this.data.rows.length === 0) {
-      return this.renderEmptyState('Пользователи');
+      return this.renderEmptyState('Пользователи')
     }
 
-    const columnNames = this.getColumnNames();
-    const columns = (this.data && this.data.columns) || Object.keys(columnNames);
-    const visibleColumns = columns.filter(col => col !== 'password_hash');
-    const displayRows = [...this.data.rows];
-    while (displayRows.length < this.perPage) displayRows.push(null);
+    const columnNames = this.getColumnNames()
+    const columns = (this.data && this.data.columns) || Object.keys(columnNames)
+    const visibleColumns = columns.filter((col) => col !== 'password_hash')
+    const displayRows = [...this.data.rows]
+    while (displayRows.length < this.perPage) displayRows.push(null)
 
     return `
       <div class="table-card">
@@ -450,25 +472,27 @@ export class UserTable extends BaseTable {
           <table class="table">
             <thead>
               <tr>
-                ${visibleColumns.map(col => `<th>${columnNames[col] || col}</th>`).join('')}
+                ${visibleColumns.map((col) => `<th>${columnNames[col] || col}</th>`).join('')}
                 <th class="text-end">Действия</th>
               </tr>
             </thead>
             <tbody>
-              ${displayRows.map(row => {
-      if (!row) {
-        return `<tr>${visibleColumns.map(() => '<td>&nbsp;</td>').join('')}<td>&nbsp;</td></tr>`;
-      }
-      return this.renderRow(row, visibleColumns);
-    }).join('')}
+              ${displayRows
+                .map((row) => {
+                  if (!row) {
+                    return `<tr>${visibleColumns.map(() => '<td>&nbsp;</td>').join('')}<td>&nbsp;</td></tr>`
+                  }
+                  return this.renderRow(row, visibleColumns)
+                })
+                .join('')}
             </tbody>
           </table>
         </div>
         ${this.renderPagination(onPageChange)}
       </div>
-    `;
+    `
   }
 }
 
-if (!window.tables) window.tables = {};
-window.tables.user = new UserTable();
+if (!window.tables) window.tables = {}
+window.tables.user = new UserTable()

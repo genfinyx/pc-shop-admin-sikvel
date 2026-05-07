@@ -1,37 +1,40 @@
-import '../styles/style.css';
-import { Session } from '../services/Session.js';
-import { Toast } from '../services/Toast.js';
+import '../styles/style.css'
+import { Session } from '../services/Session.js'
+import { Toast } from '../services/Toast.js'
 
 // Функции для дат
 function getDefaultDateStart() {
-  const date = new Date();
-  date.setDate(date.getDate() - 30);
-  return date.toISOString().split('T')[0];
+  const date = new Date()
+  date.setDate(date.getDate() - 30)
+  return date.toISOString().split('T')[0]
 }
 
 function getDefaultDateEnd() {
-  return new Date().toISOString().split('T')[0];
+  return new Date().toISOString().split('T')[0]
 }
 
-let currentTab = 'in';
-let dateStart = getDefaultDateStart();
-let dateEnd = getDefaultDateEnd();
-let reportData = { in: [], out: [], receipts: [] };
+let currentTab = 'in'
+let dateStart = getDefaultDateStart()
+let dateEnd = getDefaultDateEnd()
+let reportData = { in: [], out: [], receipts: [] }
 
 export function ReportsPage() {
   return `
     <div class="reports-container">
       <!-- НАВБАР -->
-      <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+      <nav class="navbar navbar-expand-lg navbar-dark sticky-top sticky top-0">
         <div class="container-fluid">
           <a class="navbar-brand" href="#" onclick="window.goToAdmin(); return false;">
-            <div class="logo-square">ПК</div>
-            <span>Отчёты</span>
+            <img 
+              src="/logo.png" 
+              width="906" 
+              height="906" 
+              alt="pcshop логотип"
+              class="w-10 h-10 rounded-md"
+            />
           </a>
           <div class="d-flex align-items-center ms-auto">
-            <span class="text-secondary small me-3">
-              <span class="badge bg-info ms-1">Администратор</span>
-            </span>
+            <button class="btn btn-sm btn-reports me-2" onclick="window.openHelp()">Помощь</button>
             <button class="btn btn-sm btn-reports me-2" onclick="window.goToAdmin()">Справочники</button>
             <button class="btn btn-sm btn-logout" onclick="window.logout()">Выйти</button>
           </div>
@@ -79,26 +82,33 @@ export function ReportsPage() {
         </div>
       </div>
     </div>
-  `;
+  `
 }
 
 function renderTabContent() {
-  switch(currentTab) {
+  switch (currentTab) {
     case 'in':
-      return renderIncomingInvoices();
+      return renderIncomingInvoices()
     case 'out':
-      return renderOutgoingInvoices();
+      return renderOutgoingInvoices()
     case 'receipts':
-      return renderReceipts();
+      return renderReceipts()
     default:
-      return '';
+      return ''
   }
 }
 
 function renderIncomingInvoices() {
-  const data = reportData.in || [];
-  const totalQuantity = data.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
-  const totalAmount = data.reduce((sum, item) => sum + ((Number(item.quantity) || 0) * (Number(item.purchase_price) || 0)), 0);
+  const data = reportData.in || []
+  const totalQuantity = data.reduce(
+    (sum, item) => sum + (Number(item.quantity) || 0),
+    0,
+  )
+  const totalAmount = data.reduce(
+    (sum, item) =>
+      sum + (Number(item.quantity) || 0) * (Number(item.purchase_price) || 0),
+    0,
+  )
 
   return `
     <div>
@@ -123,9 +133,14 @@ function renderIncomingInvoices() {
             </tr>
           </thead>
           <tbody>
-            ${data.length === 0 ? `
+            ${
+              data.length === 0
+                ? `
               <tr><td colspan="7" class="text-center text-secondary py-4">Нет данных за выбранный период</td</tr>
-            ` : data.map(item => `
+            `
+                : data
+                    .map(
+                      (item) => `
               <tr>
                 <td>${formatDate(item.invoice_date)}</td>
                 <td>${item.invoice_number || ''}</td>
@@ -135,9 +150,14 @@ function renderIncomingInvoices() {
                 <td class="text-end">${formatMoney(item.purchase_price)}</td>
                 <td class="text-end">${formatMoney((Number(item.quantity) || 0) * (Number(item.purchase_price) || 0))}</td>
               </tr>
-            `).join('')}
+            `,
+                    )
+                    .join('')
+            }
           </tbody>
-          ${data.length > 0 ? `
+          ${
+            data.length > 0
+              ? `
             <tfoot>
               <tr class="total-row">
                 <td colspan="4" class="text-end"><strong>Итого:</strong></td>
@@ -146,17 +166,26 @@ function renderIncomingInvoices() {
                 <td class="text-end"><strong>${formatMoney(totalAmount)}</strong></td>
               </tr>
             </tfoot>
-          ` : ''}
+          `
+              : ''
+          }
         </table>
       </div>
     </div>
-  `;
+  `
 }
 
 function renderOutgoingInvoices() {
-  const data = reportData.out || [];
-  const totalQuantity = data.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
-  const totalAmount = data.reduce((sum, item) => sum + ((Number(item.quantity) || 0) * (Number(item.price) || 0)), 0);
+  const data = reportData.out || []
+  const totalQuantity = data.reduce(
+    (sum, item) => sum + (Number(item.quantity) || 0),
+    0,
+  )
+  const totalAmount = data.reduce(
+    (sum, item) =>
+      sum + (Number(item.quantity) || 0) * (Number(item.price) || 0),
+    0,
+  )
 
   return `
     <div>
@@ -181,9 +210,14 @@ function renderOutgoingInvoices() {
             </tr>
           </thead>
           <tbody>
-            ${data.length === 0 ? `
+            ${
+              data.length === 0
+                ? `
               <tr><td colspan="7" class="text-center text-secondary py-4">Нет данных за выбранный период</td</tr>
-            ` : data.map(item => `
+            `
+                : data
+                    .map(
+                      (item) => `
               <tr>
                 <td>${formatDate(item.invoice_date)}</td>
                 <td>${item.invoice_number || ''}</td>
@@ -193,9 +227,14 @@ function renderOutgoingInvoices() {
                 <td class="text-end">${formatMoney(item.price)}</td>
                 <td class="text-end">${formatMoney((Number(item.quantity) || 0) * (Number(item.price) || 0))}</td>
               </tr>
-            `).join('')}
+            `,
+                    )
+                    .join('')
+            }
           </tbody>
-          ${data.length > 0 ? `
+          ${
+            data.length > 0
+              ? `
             <tfoot>
               <tr class="total-row">
                 <td colspan="4" class="text-end"><strong>Итого:</strong></td>
@@ -204,16 +243,21 @@ function renderOutgoingInvoices() {
                 <td class="text-end"><strong>${formatMoney(totalAmount)}</strong></td>
               </tr>
             </tfoot>
-          ` : ''}
+          `
+              : ''
+          }
         </table>
       </div>
     </div>
-  `;
+  `
 }
 
 function renderReceipts() {
-  const data = reportData.receipts || [];
-  const totalAmount = data.reduce((sum, item) => sum + (Number(item.total_amount) || 0), 0);
+  const data = reportData.receipts || []
+  const totalAmount = data.reduce(
+    (sum, item) => sum + (Number(item.total_amount) || 0),
+    0,
+  )
 
   return `
     <div>
@@ -234,9 +278,14 @@ function renderReceipts() {
             </tr>
           </thead>
           <tbody>
-            ${data.length === 0 ? `
+            ${
+              data.length === 0
+                ? `
               <tr><td colspan="6" class="text-center text-secondary py-4">Нет данных за выбранный период</td</tr>
-            ` : data.map(item => `
+            `
+                : data
+                    .map(
+                      (item) => `
               <tr>
                 <td>${formatDate(item.receipt_date)}</td>
                 <td>${item.receipt_number || item.receipt_id}</td>
@@ -249,9 +298,14 @@ function renderReceipts() {
                   </button>
                 </td>
               </tr>
-            `).join('')}
+            `,
+                    )
+                    .join('')
+            }
           </tbody>
-          ${data.length > 0 ? `
+          ${
+            data.length > 0
+              ? `
             <tfoot>
               <tr class="total-row">
                 <td colspan="4" class="text-end"><strong>Итого:</strong></td>
@@ -259,150 +313,179 @@ function renderReceipts() {
                 <td class="text-end"> </td>
               </tr>
             </tfoot>
-          ` : ''}
+          `
+              : ''
+          }
         </table>
       </div>
     </div>
-  `;
+  `
 }
 
 function formatDate(dateString) {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('ru-RU');
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  return date.toLocaleDateString('ru-RU')
 }
 
 function formatMoney(amount) {
-  if (amount === undefined || amount === null) return '0.00';
-  return Number(amount).toFixed(2) + ' ₽';
+  if (amount === undefined || amount === null) return '0.00'
+  return Number(amount).toFixed(2) + ' ₽'
 }
 
 // ------------------ Глобальные функции экспорта ------------------
 window.downloadExcel = async (type) => {
-  const startDate = document.getElementById('dateStart').value;
-  const endDate = document.getElementById('dateEnd').value;
+  const startDate = document.getElementById('dateStart').value
+  const endDate = document.getElementById('dateEnd').value
   if (!startDate || !endDate) {
-    Toast.error('Выберите период дат');
-    return;
+    Toast.error('Выберите период дат')
+    return
   }
 
   // Проверяем, есть ли данные в текущей вкладке
-  let hasData = true;
-  if (type === 'in' && (!reportData.in || reportData.in.length === 0)) hasData = false;
-  if (type === 'out' && (!reportData.out || reportData.out.length === 0)) hasData = false;
-  if (type === 'receipts' && (!reportData.receipts || reportData.receipts.length === 0)) hasData = false;
+  let hasData = true
+  if (type === 'in' && (!reportData.in || reportData.in.length === 0))
+    hasData = false
+  if (type === 'out' && (!reportData.out || reportData.out.length === 0))
+    hasData = false
+  if (
+    type === 'receipts' &&
+    (!reportData.receipts || reportData.receipts.length === 0)
+  )
+    hasData = false
 
   if (!hasData) {
-    Toast.error('Нет данных за выбранный период. Скачивание невозможно.');
-    return;
+    Toast.error('Нет данных за выбранный период. Скачивание невозможно.')
+    return
   }
 
   try {
-    const filepath = await window.go.main.App.ExportInvoiceWithTemplate(type, startDate, endDate);
+    const filepath = await window.go.main.App.ExportInvoiceWithTemplate(
+      type,
+      startDate,
+      endDate,
+    )
     if (!filepath) {
-      Toast.error('Нет данных за выбранный период');
-      return;
+      Toast.error('Нет данных за выбранный период')
+      return
     }
-    const base64 = await window.go.main.App.ReadFileBase64(filepath);
-    const binaryString = atob(base64);
-    const bytes = new Uint8Array(binaryString.length);
+    const base64 = await window.go.main.App.ReadFileBase64(filepath)
+    const binaryString = atob(base64)
+    const bytes = new Uint8Array(binaryString.length)
     for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
+      bytes[i] = binaryString.charCodeAt(i)
     }
-    const blob = new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.href = url;
-    link.setAttribute('download', `report_${type}_${startDate}_to_${endDate}.xlsx`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    Toast.success('Файл успешно скачан');
+    const blob = new Blob([bytes], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.href = url
+    link.setAttribute(
+      'download',
+      `report_${type}_${startDate}_to_${endDate}.xlsx`,
+    )
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+    Toast.success('Файл успешно скачан')
   } catch (error) {
-    console.error('Ошибка скачивания:', error);
-    Toast.error('Ошибка: ' + error.message);
+    console.error('Ошибка скачивания:', error)
+    Toast.error('Ошибка: ' + error.message)
   }
-};
+}
 
 window.printReceipt = async (id) => {
   try {
-    const filepath = await window.go.main.App.GenerateReceiptPDF(id);
+    const filepath = await window.go.main.App.GenerateReceiptPDF(id)
     if (!filepath) {
-      Toast.error('Не удалось сгенерировать чек');
-      return;
+      Toast.error('Не удалось сгенерировать чек')
+      return
     }
-    const base64 = await window.go.main.App.ReadFileBase64(filepath);
-    const binaryString = atob(base64);
-    const bytes = new Uint8Array(binaryString.length);
+    const base64 = await window.go.main.App.ReadFileBase64(filepath)
+    const binaryString = atob(base64)
+    const bytes = new Uint8Array(binaryString.length)
     for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
+      bytes[i] = binaryString.charCodeAt(i)
     }
-    const blob = new Blob([bytes], { type: 'application/pdf' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.href = url;
-    link.setAttribute('download', `receipt_${id}.pdf`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    Toast.success('Чек успешно скачан');
+    const blob = new Blob([bytes], { type: 'application/pdf' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.href = url
+    link.setAttribute('download', `receipt_${id}.pdf`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+    Toast.success('Чек успешно скачан')
   } catch (error) {
-    console.error('Ошибка печати чека:', error);
-    Toast.error('Ошибка: ' + error.message);
+    console.error('Ошибка печати чека:', error)
+    Toast.error('Ошибка: ' + error.message)
   }
-};
+}
 
 window.changeReportTab = async (tab) => {
-  currentTab = tab;
+  currentTab = tab
   try {
-    await loadReportData();
-    document.getElementById('app').innerHTML = ReportsPage();
+    await loadReportData()
+    document.getElementById('app').innerHTML = ReportsPage()
   } catch (error) {
-    Toast.error('Ошибка загрузки данных: ' + error.message);
+    Toast.error('Ошибка загрузки данных: ' + error.message)
   }
-};
+}
 
 window.applyDateFilter = async () => {
-  dateStart = document.getElementById('dateStart').value;
-  dateEnd = document.getElementById('dateEnd').value;
+  dateStart = document.getElementById('dateStart').value
+  dateEnd = document.getElementById('dateEnd').value
   try {
-    await loadReportData();
-    document.getElementById('app').innerHTML = ReportsPage();
+    await loadReportData()
+    document.getElementById('app').innerHTML = ReportsPage()
   } catch (error) {
-    Toast.error('Ошибка применения фильтра: ' + error.message);
+    Toast.error('Ошибка применения фильтра: ' + error.message)
   }
-};
+}
 
 window.goToAdmin = () => {
-  if (window.goToAdminGlobal) window.goToAdminGlobal();
-};
+  if (window.goToAdminGlobal) window.goToAdminGlobal()
+}
 
 window.logout = () => {
-  localStorage.setItem('logout', 'true');
-  Session.logout();
-  window.location.reload();
-};
+  localStorage.setItem('logout', 'true')
+  Session.logout()
+  window.location.reload()
+}
 
 async function loadReportData() {
   try {
-    const inData = await window.go.main.App.GetReportData('in', dateStart, dateEnd);
-    reportData.in = inData || [];
-    const outData = await window.go.main.App.GetReportData('out', dateStart, dateEnd);
-    reportData.out = outData || [];
-    const receiptsData = await window.go.main.App.GetReportData('receipts', dateStart, dateEnd);
-    reportData.receipts = receiptsData || [];
+    const inData = await window.go.main.App.GetReportData(
+      'in',
+      dateStart,
+      dateEnd,
+    )
+    reportData.in = inData || []
+    const outData = await window.go.main.App.GetReportData(
+      'out',
+      dateStart,
+      dateEnd,
+    )
+    reportData.out = outData || []
+    const receiptsData = await window.go.main.App.GetReportData(
+      'receipts',
+      dateStart,
+      dateEnd,
+    )
+    reportData.receipts = receiptsData || []
   } catch (error) {
-    console.error('Ошибка загрузки отчётов:', error);
-    Toast.error('Ошибка загрузки отчётов: ' + error.message);
-    throw error; // пробросим дальше для обработки в вызывающих функциях
+    console.error('Ошибка загрузки отчётов:', error)
+    Toast.error('Ошибка загрузки отчётов: ' + error.message)
+    throw error // пробросим дальше для обработки в вызывающих функциях
   }
 }
 
 // Загружаем данные при старте
 setTimeout(() => {
-  loadReportData().catch(err => {
-    Toast.error('Не удалось загрузить начальные данные отчётов');
-  });
-}, 100);
+  loadReportData().catch((err) => {
+    Toast.error('Не удалось загрузить начальные данные отчётов')
+  })
+}, 100)

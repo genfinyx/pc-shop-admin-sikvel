@@ -1,36 +1,50 @@
-import '../styles/style.css';
-import { Session } from '../services/Session.js';
+import '../styles/style.css'
+import { Session } from '../services/Session.js'
 
 const tables = [
-  'main', 'user', 'product', 'category', 'order', 'order_item',
-  'cart_item', 'delivery', 'review', 'wishlist', 'invoice_in',
-  'invoice_out', 'receipt', 'product_image'
-];
+  'main',
+  'user',
+  'product',
+  'category',
+  'order',
+  'order_item',
+  'cart_item',
+  'delivery',
+  'review',
+  'wishlist',
+  'invoice_in',
+  'invoice_out',
+  'receipt',
+  'product_image',
+]
 
 // Сохраняем состояние текущей таблицы
-let currentTableState = null;
+let currentTableState = null
 
 export async function AdminPage(restoreState = false) {
-  const activeTable = Session.getActiveTable();
+  const activeTable = Session.getActiveTable()
 
   // Если нужно восстановить состояние, возвращаем сохранённый HTML
   if (restoreState && currentTableState) {
-    return currentTableState;
+    return currentTableState
   }
 
   const html = `
     <div id="adminPageRoot">
       <!-- НАВБАР -->
-      <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+      <nav class="navbar navbar-expand-lg navbar-dark sticky-top sticky top-0">
         <div class="container-fluid">
           <a class="navbar-brand" href="#">
-            <div class="logo-square">ПК</div>
-            <span>Панель администратора</span>
+            <img 
+              src="/logo.png" 
+              width="906" 
+              height="906" 
+              alt="pcshop логотип"
+              class="w-10 h-10 rounded-md"
+            />
           </a>
           <div class="d-flex align-items-center ms-auto">
-            <span class="text-secondary small me-3">
-              <span class="badge bg-info ms-1">Администратор</span>
-            </span>
+            <button class="btn btn-sm btn-reports me-2" onclick="window.openHelp()">Помощь</button>
             <button class="btn btn-sm btn-reports me-2" onclick="window.goToReports()">Отчёты</button>
             <button class="btn btn-sm btn-logout" onclick="window.logout()">Выйти</button>
           </div>
@@ -48,13 +62,17 @@ export async function AdminPage(restoreState = false) {
                 <span class="badge tables-count">${tables.length}</span>
               </div>
               <div class="list-group list-group-flush small">
-                ${tables.map(table => `
+                ${tables
+                  .map(
+                    (table) => `
                   <a href="#" 
                      class="list-group-item list-group-item-action ${table === activeTable ? 'active' : ''}"
                      onclick="window.changeTable('${table}'); return false;">
                     ${getTableDisplayName(table)}
                   </a>
-                `).join('')}
+                `,
+                  )
+                  .join('')}
               </div>
             </div>
           </div>
@@ -69,84 +87,84 @@ export async function AdminPage(restoreState = false) {
       <!-- КОНТЕЙНЕР ДЛЯ МОДАЛКИ -->
       <div id="modalContainer"></div>
     </div>
-  `;
+  `
 
   // Сохраняем состояние
-  currentTableState = html;
-  return html;
+  currentTableState = html
+  return html
 }
 
 // Глобальные функции
 window.changeTable = async (tableName) => {
-  Session.setActiveTable(tableName);
+  Session.setActiveTable(tableName)
 
-  document.querySelectorAll('.list-group-item').forEach(el => {
-    el.classList.remove('active');
-  });
-  if (event) event.target.classList.add('active');
+  document.querySelectorAll('.list-group-item').forEach((el) => {
+    el.classList.remove('active')
+  })
+  if (event) event.target.classList.add('active')
 
-  const { changeTable } = await import('../components/TableContainer.js');
+  const { changeTable } = await import('../components/TableContainer.js')
   await changeTable(tableName, {
     onEdit: (table, id) => console.log('Редактировать', table, id),
-    onDelete: (table, id) => console.log('Удалить', table, id)
-  });
-};
+    onDelete: (table, id) => console.log('Удалить', table, id),
+  })
+}
 
 window.goToReports = async () => {
   // Сохраняем состояние текущей страницы перед переходом
-  const currentHtml = document.getElementById('app').innerHTML;
-  sessionStorage.setItem('savedAdminPage', currentHtml);
+  const currentHtml = document.getElementById('app').innerHTML
+  sessionStorage.setItem('savedAdminPage', currentHtml)
 
-  const { ReportsPage } = await import('./ReportsPage.js');
-  document.getElementById('app').innerHTML = ReportsPage();
-};
+  const { ReportsPage } = await import('./ReportsPage.js')
+  document.getElementById('app').innerHTML = ReportsPage()
+}
 
 window.goToAdmin = async () => {
   // Восстанавливаем сохранённое состояние
-  const savedHtml = sessionStorage.getItem('savedAdminPage');
+  const savedHtml = sessionStorage.getItem('savedAdminPage')
   if (savedHtml) {
-    document.getElementById('app').innerHTML = savedHtml;
-    sessionStorage.removeItem('savedAdminPage');
+    document.getElementById('app').innerHTML = savedHtml
+    sessionStorage.removeItem('savedAdminPage')
   } else {
-    const { AdminPage } = await import('./AdminPage.js');
-    document.getElementById('app').innerHTML = await AdminPage();
+    const { AdminPage } = await import('./AdminPage.js')
+    document.getElementById('app').innerHTML = await AdminPage()
   }
-};
+}
 
 window.logout = () => {
-  localStorage.setItem('logout', 'true');
-  Session.logout();
-  window.location.reload();
-};
+  localStorage.setItem('logout', 'true')
+  Session.logout()
+  window.location.reload()
+}
 
 function getTableDisplayName(table) {
   const names = {
-    'main': 'Главная',
-    'user': 'Пользователи',
-    'product': 'Товары',
-    'category': 'Категории',
-    'order': 'Заказы',
-    'order_item': 'Позиции заказов',
-    'cart_item': 'Корзина',
-    'delivery': 'Доставка',
-    'review': 'Отзывы',
-    'wishlist': 'Избранное',
-    'invoice_in': 'Приходные накладные',
-    'invoice_out': 'Расходные накладные',
-    'receipt': 'Чеки',
-    'product_image': 'Изображения товаров'
-  };
+    main: 'Главная',
+    user: 'Пользователи',
+    product: 'Товары',
+    category: 'Категории',
+    order: 'Заказы',
+    order_item: 'Позиции заказов',
+    cart_item: 'Корзина',
+    delivery: 'Доставка',
+    review: 'Отзывы',
+    wishlist: 'Избранное',
+    invoice_in: 'Приходные накладные',
+    invoice_out: 'Расходные накладные',
+    receipt: 'Чеки',
+    product_image: 'Изображения товаров',
+  }
 
   setTimeout(async () => {
-    const activeTable = Session.getActiveTable();
-    const { changeTable } = await import('../components/TableContainer.js');
+    const activeTable = Session.getActiveTable()
+    const { changeTable } = await import('../components/TableContainer.js')
     await changeTable(activeTable, {
       onEdit: (table, id) => console.log('Редактировать', table, id),
-      onDelete: (table, id) => console.log('Удалить', table, id)
-    });
-  }, 50);
+      onDelete: (table, id) => console.log('Удалить', table, id),
+    })
+  }, 50)
 
-  return names[table] || table;
+  return names[table] || table
 }
 
-window.goToAdminGlobal = window.goToAdmin;
+window.goToAdminGlobal = window.goToAdmin

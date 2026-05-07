@@ -1,18 +1,18 @@
-import { BaseTable } from './BaseTable.js';
-import { Toast } from '../../services/Toast.js';
+import { BaseTable } from './BaseTable.js'
+import { Toast } from '../../services/Toast.js'
 
 export class CategoryTable extends BaseTable {
   constructor() {
-    super();
-    this.editId = null;
-    this.formData = {};
-    this.rowHeight = 53;
-    this.categories = [];
-    this.data = { columns: [], rows: [], total: 0 };
+    super()
+    this.editId = null
+    this.formData = {}
+    this.rowHeight = 53
+    this.categories = []
+    this.data = { columns: [], rows: [], total: 0 }
   }
 
   getTableName() {
-    return 'category';
+    return 'category'
   }
 
   getColumnNames() {
@@ -21,179 +21,184 @@ export class CategoryTable extends BaseTable {
       name: 'Название',
       description: 'Описание',
       parent_category_id: 'Родительская категория',
-      main_image_path: 'Изображение'
-    };
+      main_image_path: 'Изображение',
+    }
   }
 
   async handleSearch(event) {
-    if (event) event.preventDefault();
-    const input = document.getElementById('searchInput');
-    this.currentSearch = input ? input.value : '';
-    this.currentPage = 1;
-    await this.load(this.currentPage, this.currentSearch);
-    const { renderTable } = await import('../TableContainer.js');
+    if (event) event.preventDefault()
+    const input = document.getElementById('searchInput')
+    this.currentSearch = input ? input.value : ''
+    this.currentPage = 1
+    await this.load(this.currentPage, this.currentSearch)
+    const { renderTable } = await import('../TableContainer.js')
     await renderTable('category', 'tableContainer', {
       onEdit: (table, id) => console.log('Edit', table, id),
-      onDelete: (table, id) => console.log('Delete', table, id)
-    });
+      onDelete: (table, id) => console.log('Delete', table, id),
+    })
   }
 
   async handleSearchClear() {
-    this.currentSearch = '';
-    this.currentPage = 1;
-    const input = document.getElementById('searchInput');
-    if (input) input.value = '';
-    await this.load(this.currentPage, this.currentSearch);
-    const { renderTable } = await import('../TableContainer.js');
+    this.currentSearch = ''
+    this.currentPage = 1
+    const input = document.getElementById('searchInput')
+    if (input) input.value = ''
+    await this.load(this.currentPage, this.currentSearch)
+    const { renderTable } = await import('../TableContainer.js')
     await renderTable('category', 'tableContainer', {
       onEdit: (table, id) => console.log('Edit', table, id),
-      onDelete: (table, id) => console.log('Delete', table, id)
-    });
+      onDelete: (table, id) => console.log('Delete', table, id),
+    })
   }
 
   async load(page = 1, search = '') {
-    this.currentPage = page;
-    this.currentSearch = search;
-    await this.loadData('category', page, search);
-    await this.loadCategories();
+    this.currentPage = page
+    this.currentSearch = search
+    await this.loadData('category', page, search)
+    await this.loadCategories()
   }
 
   async loadData(table, page, search) {
     try {
-      const result = await window.go.main.App.GetTableData(table, page, search, this.perPage);
-      this.data = result;
-      return result;
+      const result = await window.go.main.App.GetTableData(
+        table,
+        page,
+        search,
+        this.perPage,
+      )
+      this.data = result
+      return result
     } catch (error) {
-      Toast.error('Ошибка загрузки данных: ' + error.message);
-      this.data = { columns: [], rows: [], total: 0 };
-      throw error;
+      Toast.error('Ошибка загрузки данных: ' + error.message)
+      this.data = { columns: [], rows: [], total: 0 }
+      throw error
     }
   }
 
   async loadCategories() {
     try {
-      const result = await window.go.main.App.GetCategories();
-      this.categories = result || [];
+      const result = await window.go.main.App.GetCategories()
+      this.categories = result || []
     } catch (error) {
-      console.error('Ошибка загрузки категорий:', error);
-      this.categories = [];
+      console.error('Ошибка загрузки категорий:', error)
+      this.categories = []
     }
   }
 
   async changePage(page) {
-    this.currentPage = page;
-    await this.load(this.currentPage, this.currentSearch);
-    const { renderTable } = await import('../TableContainer.js');
+    this.currentPage = page
+    await this.load(this.currentPage, this.currentSearch)
+    const { renderTable } = await import('../TableContainer.js')
     await renderTable('category', 'tableContainer', {
       onEdit: (table, id) => console.log('Edit', table, id),
-      onDelete: (table, id) => console.log('Delete', table, id)
-    });
+      onDelete: (table, id) => console.log('Delete', table, id),
+    })
   }
 
   getParentCategoryName(parentId) {
-    if (!parentId) return '<span class="text-secondary">—</span>';
-    const category = this.categories.find(c => c.category_id == parentId);
-    return category ? category.name : String(parentId);
+    if (!parentId) return '<span class="text-secondary">—</span>'
+    const category = this.categories.find((c) => c.category_id == parentId)
+    return category ? category.name : String(parentId)
   }
 
   validateForm(data) {
-    const errors = [];
-    if (!data.name?.trim()) errors.push('Название категории обязательно');
-    return errors;
+    const errors = []
+    if (!data.name?.trim()) errors.push('Название категории обязательно')
+    return errors
   }
 
   async createCategory(data) {
     try {
-      const result = await window.go.main.App.CreateCategory(data);
+      const result = await window.go.main.App.CreateCategory(data)
       if (result.success) {
-        this.closeModal();
-        await this.load(this.currentPage, this.currentSearch);
-        Toast.success('Категория успешно создана');
-        const { renderTable } = await import('../TableContainer.js');
+        this.closeModal()
+        await this.load(this.currentPage, this.currentSearch)
+        Toast.success('Категория успешно создана')
+        const { renderTable } = await import('../TableContainer.js')
         await renderTable('category', 'tableContainer', {
           onEdit: (table, id) => console.log('Edit', table, id),
-          onDelete: (table, id) => console.log('Delete', table, id)
-        });
+          onDelete: (table, id) => console.log('Delete', table, id),
+        })
       } else {
-        Toast.error(result.message);
+        Toast.error(result.message)
       }
     } catch (error) {
-      Toast.error('Ошибка: ' + error.message);
+      Toast.error('Ошибка: ' + error.message)
     }
   }
 
   async updateCategory(id, data) {
     try {
-      const result = await window.go.main.App.UpdateCategory(id, data);
+      const result = await window.go.main.App.UpdateCategory(id, data)
       if (result.success) {
-        this.closeModal();
-        await this.load(this.currentPage, this.currentSearch);
-        Toast.success('Категория успешно обновлена');
-        const { renderTable } = await import('../TableContainer.js');
+        this.closeModal()
+        await this.load(this.currentPage, this.currentSearch)
+        Toast.success('Категория успешно обновлена')
+        const { renderTable } = await import('../TableContainer.js')
         await renderTable('category', 'tableContainer', {
           onEdit: (table, id) => console.log('Edit', table, id),
-          onDelete: (table, id) => console.log('Delete', table, id)
-        });
+          onDelete: (table, id) => console.log('Delete', table, id),
+        })
       } else {
-        Toast.error(result.message);
+        Toast.error(result.message)
       }
     } catch (error) {
-      Toast.error('Ошибка: ' + error.message);
+      Toast.error('Ошибка: ' + error.message)
     }
   }
 
   async deleteCategory(id) {
     try {
-      const result = await window.go.main.App.DeleteCategory(id);
+      const result = await window.go.main.App.DeleteCategory(id)
       if (result.success) {
-        await this.load(this.currentPage, this.currentSearch);
-        Toast.success('Категория успешно удалена');
-        const { renderTable } = await import('../TableContainer.js');
+        await this.load(this.currentPage, this.currentSearch)
+        Toast.success('Категория успешно удалена')
+        const { renderTable } = await import('../TableContainer.js')
         await renderTable('category', 'tableContainer', {
           onEdit: (table, id) => console.log('Edit', table, id),
-          onDelete: (table, id) => console.log('Delete', table, id)
-        });
+          onDelete: (table, id) => console.log('Delete', table, id),
+        })
       } else {
-        Toast.error(result.message);
+        Toast.error(result.message)
       }
     } catch (error) {
-      Toast.error('Ошибка: ' + error.message);
+      Toast.error('Ошибка: ' + error.message)
     }
   }
 
   openCreateForm() {
-    this.editId = null;
-    this.formData = {};
-    this.renderModal();
+    this.editId = null
+    this.formData = {}
+    this.renderModal()
   }
 
   async openEditForm(id) {
-    this.editId = id;
-    const data = await this.loadCategoryData(id);
+    this.editId = id
+    const data = await this.loadCategoryData(id)
     if (data) {
-      this.formData = data;
-      this.renderModal();
+      this.formData = data
+      this.renderModal()
     }
   }
 
   async loadCategoryData(id) {
     try {
-      return await window.go.main.App.GetCategory(id);
+      return await window.go.main.App.GetCategory(id)
     } catch (error) {
-      Toast.error('Ошибка загрузки данных категории: ' + error.message);
-      return null;
+      Toast.error('Ошибка загрузки данных категории: ' + error.message)
+      return null
     }
   }
 
   showDeleteModal(id) {
-    const category = this.data.rows?.find(row => row.category_id == id);
-    const categoryName = category?.name || `#${id}`;
+    const category = this.data.rows?.find((row) => row.category_id == id)
+    const categoryName = category?.name || `#${id}`
 
-    let modalContainer = document.getElementById('modalContainer');
+    let modalContainer = document.getElementById('modalContainer')
     if (!modalContainer) {
-      modalContainer = document.createElement('div');
-      modalContainer.id = 'modalContainer';
-      document.body.appendChild(modalContainer);
+      modalContainer = document.createElement('div')
+      modalContainer.id = 'modalContainer'
+      document.body.appendChild(modalContainer)
     }
 
     const modalHtml = `
@@ -219,31 +224,34 @@ export class CategoryTable extends BaseTable {
           </div>
         </div>
       </div>
-    `;
+    `
 
-    modalContainer.innerHTML = modalHtml;
+    modalContainer.innerHTML = modalHtml
   }
 
   closeDeleteModal() {
-    document.getElementById('modalContainer').innerHTML = '';
+    document.getElementById('modalContainer').innerHTML = ''
   }
 
   async confirmDelete(id) {
-    this.closeDeleteModal();
-    await this.deleteCategory(id);
+    this.closeDeleteModal()
+    await this.deleteCategory(id)
   }
 
   closeModal() {
-    document.getElementById('modalContainer').innerHTML = '';
+    document.getElementById('modalContainer').innerHTML = ''
   }
 
   renderModal() {
-    const title = this.editId ? 'Редактировать категорию' : 'Новая категория';
+    const title = this.editId ? 'Редактировать категорию' : 'Новая категория'
 
     const parentOptions = this.categories
-        .filter(cat => this.editId ? cat.category_id != this.editId : true)
-        .map(cat => `<option value="${cat.category_id}" ${this.formData.parent_category_id == cat.category_id ? 'selected' : ''}>${cat.name}</option>`)
-        .join('');
+      .filter((cat) => (this.editId ? cat.category_id != this.editId : true))
+      .map(
+        (cat) =>
+          `<option value="${cat.category_id}" ${this.formData.parent_category_id == cat.category_id ? 'selected' : ''}>${cat.name}</option>`,
+      )
+      .join('')
 
     const modalHtml = `
       <div class="modal show" style="display: block; background: rgba(0,0,0,0.7);">
@@ -287,70 +295,71 @@ export class CategoryTable extends BaseTable {
           </div>
         </div>
       </div>
-    `;
-    document.getElementById('modalContainer').innerHTML = modalHtml;
+    `
+    document.getElementById('modalContainer').innerHTML = modalHtml
   }
 
   async saveForm(e) {
-    e.preventDefault();
-    const form = e.target;
-    const formData = new FormData(form);
-    const data = Object.fromEntries(formData.entries());
+    e.preventDefault()
+    const form = e.target
+    const formData = new FormData(form)
+    const data = Object.fromEntries(formData.entries())
 
     for (let key in data) {
-      if (data[key] === '') data[key] = null;
+      if (data[key] === '') data[key] = null
     }
 
-    const errors = this.validateForm(data);
+    const errors = this.validateForm(data)
     if (errors.length > 0) {
-      Toast.error(errors.join('<br>'));
-      return;
+      Toast.error(errors.join('<br>'))
+      return
     }
 
     if (this.editId) {
-      await this.updateCategory(this.editId, data);
+      await this.updateCategory(this.editId, data)
     } else {
-      await this.createCategory(data);
+      await this.createCategory(data)
     }
   }
 
   formatCellValue(column, value) {
-    if (value === null || value === undefined) return '<span class="text-secondary">—</span>';
+    if (value === null || value === undefined)
+      return '<span class="text-secondary">—</span>'
     if (column === 'parent_category_id') {
-      return this.getParentCategoryName(value);
+      return this.getParentCategoryName(value)
     }
     if (column === 'main_image_path' && value && value.length > 40) {
-      return `<span title="${value}">${value.substring(0, 40)}…</span>`;
+      return `<span title="${value}">${value.substring(0, 40)}…</span>`
     }
     if (column === 'description' && value && value.length > 50) {
-      return `<span title="${value}">${value.substring(0, 50)}…</span>`;
+      return `<span title="${value}">${value.substring(0, 50)}…</span>`
     }
-    return String(value);
+    return String(value)
   }
 
   renderRow(row, columns) {
     return `
       <tr>
-        ${columns.map(col => `<td>${this.formatCellValue(col, row[col])}</td>`).join('')}
+        ${columns.map((col) => `<td>${this.formatCellValue(col, row[col])}</td>`).join('')}
         <td class="text-end">
           <button class="btn btn-edit" onclick="tables.category.openEditForm(${row.category_id})">Изменить</button>
           <button class="btn btn-delete" onclick="tables.category.showDeleteModal(${row.category_id})">Удалить</button>
         </td>
       </tr>
-    `;
+    `
   }
 
   render(options = {}) {
-    const { onSearch, onPageChange } = options;
+    const { onSearch, onPageChange } = options
 
     if (!this.data.rows || this.data.rows.length === 0) {
-      return this.renderEmptyState('Категории');
+      return this.renderEmptyState('Категории')
     }
 
-    const columnNames = this.getColumnNames();
-    const columns = (this.data && this.data.columns) || Object.keys(columnNames);
-    const displayRows = [...this.data.rows];
-    while (displayRows.length < this.perPage) displayRows.push(null);
+    const columnNames = this.getColumnNames()
+    const columns = (this.data && this.data.columns) || Object.keys(columnNames)
+    const displayRows = [...this.data.rows]
+    while (displayRows.length < this.perPage) displayRows.push(null)
 
     return `
       <div class="table-card">
@@ -368,25 +377,27 @@ export class CategoryTable extends BaseTable {
           <table class="table">
             <thead>
               <tr>
-                ${columns.map(col => `<th>${columnNames[col] || col}</th>`).join('')}
+                ${columns.map((col) => `<th>${columnNames[col] || col}</th>`).join('')}
                 <th class="text-end">Действия</th>
               </tr>
             </thead>
             <tbody>
-              ${displayRows.map(row => {
-      if (!row) {
-        return `<tr>${columns.map(() => '<td>&nbsp;</td>').join('')}<td>&nbsp;</td></tr>`;
-      }
-      return this.renderRow(row, columns);
-    }).join('')}
+              ${displayRows
+                .map((row) => {
+                  if (!row) {
+                    return `<tr>${columns.map(() => '<td>&nbsp;</td>').join('')}<td>&nbsp;</td></tr>`
+                  }
+                  return this.renderRow(row, columns)
+                })
+                .join('')}
             </tbody>
           </table>
         </div>
         ${this.renderPagination(onPageChange)}
       </div>
-    `;
+    `
   }
 }
 
-if (!window.tables) window.tables = {};
-window.tables.category = new CategoryTable();
+if (!window.tables) window.tables = {}
+window.tables.category = new CategoryTable()

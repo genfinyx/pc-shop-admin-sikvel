@@ -1,5 +1,5 @@
-import '../styles/style.css';
-import { Session } from '../services/Session.js';
+import '../styles/style.css'
+import { Session } from '../services/Session.js'
 
 export function LoginPage() {
   return `
@@ -34,34 +34,34 @@ export function LoginPage() {
         <div id="loginError" class="error-message"></div>
       </div>
     </div>
-  `;
+  `
 }
 
 export function initLogin(onSuccess) {
-  console.log('initLogin вызван');
+  console.log('initLogin вызван')
 
-  const form = document.getElementById('loginForm');
-  const errorDiv = document.getElementById('loginError');
+  const form = document.getElementById('loginForm')
+  const errorDiv = document.getElementById('loginError')
 
   if (!form) {
-    console.error('Форма входа не найдена!');
-    return;
+    console.error('Форма входа не найдена!')
+    return
   }
 
   form.addEventListener('submit', async (e) => {
-    e.preventDefault();
+    e.preventDefault()
 
-    const username = form.username.value;
-    const password = form.password.value;
+    const username = form.username.value
+    const password = form.password.value
 
-    errorDiv.style.display = 'none';
+    errorDiv.style.display = 'none'
 
     try {
-      const result = await window.go.main.App.Login(username, password);
-      console.log('Результат входа из Go:', result);
+      const result = await window.go.main.App.Login(username, password)
+      console.log('Результат входа из Go:', result)
 
       if (result.success) {
-        console.log('Сохранение пользователя с ID:', result.userId);
+        console.log('Сохранение пользователя с ID:', result.userId)
 
         Session.setUser({
           id: result.userId,
@@ -70,20 +70,20 @@ export function initLogin(onSuccess) {
           firstName: result.firstName,
           lastName: result.lastName,
           middleName: result.middleName,
-          email: result.email
-        });
+          email: result.email,
+        })
 
-        console.log('Сессия после сохранения:', Session.getUser());
-        console.log('ID пользователя в сессии:', Session.getUserId());
+        console.log('Сессия после сохранения:', Session.getUser())
+        console.log('ID пользователя в сессии:', Session.getUserId())
 
-        onSuccess();
+        onSuccess()
       } else {
-        errorDiv.style.display = 'block';
-        errorDiv.textContent = result.message || 'Неверный логин или пароль';
+        errorDiv.style.display = 'block'
+        errorDiv.textContent = result.message || 'Неверный логин или пароль'
       }
     } catch (error) {
-      errorDiv.style.display = 'block';
-      errorDiv.textContent = 'Ошибка входа: ' + error.message;
+      errorDiv.style.display = 'block'
+      errorDiv.textContent = 'Ошибка входа: ' + error.message
     }
-  });
+  })
 }

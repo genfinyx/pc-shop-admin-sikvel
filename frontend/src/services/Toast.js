@@ -1,10 +1,10 @@
 // Система уведомлений (10 секунд, с крестиком)
 export const Toast = {
   show(message, type = 'success', duration = 10000) {
-    let container = document.getElementById('toastContainer');
+    let container = document.getElementById('toastContainer')
     if (!container) {
-      container = document.createElement('div');
-      container.id = 'toastContainer';
+      container = document.createElement('div')
+      container.id = 'toastContainer'
       container.style.cssText = `
         position: fixed;
         top: 20px;
@@ -13,14 +13,14 @@ export const Toast = {
         display: flex;
         flex-direction: column;
         gap: 12px;
-      `;
-      document.body.appendChild(container);
+      `
+      document.body.appendChild(container)
     }
 
-    const bgColor = type === 'success' ? '#059669' : '#dc2626';
-    const borderColor = type === 'success' ? '#10b981' : '#ef4444';
+    const bgColor = type === 'success' ? '#059669' : '#dc2626'
+    const borderColor = type === 'success' ? '#10b981' : '#ef4444'
 
-    const toast = document.createElement('div');
+    const toast = document.createElement('div')
     toast.style.cssText = `
       background: ${bgColor};
       color: white;
@@ -38,7 +38,7 @@ export const Toast = {
       align-items: center;
       justify-content: space-between;
       gap: 15px;
-    `;
+    `
 
     toast.innerHTML = `
       <span>${message}</span>
@@ -52,38 +52,38 @@ export const Toast = {
         opacity: 0.7;
         transition: opacity 0.2s;
       " onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">&times;</button>
-    `;
+    `
 
-    container.appendChild(toast);
+    container.appendChild(toast)
 
-    const closeBtn = toast.querySelector('.toast-close');
-    let timeoutId;
+    const closeBtn = toast.querySelector('.toast-close')
+    let timeoutId
 
     const removeToast = () => {
-      toast.style.animation = 'slideOut 0.3s ease';
+      toast.style.animation = 'slideOut 0.3s ease'
       setTimeout(() => {
-        if (toast.parentNode) toast.parentNode.removeChild(toast);
-      }, 300);
-      if (timeoutId) clearTimeout(timeoutId);
-    };
+        if (toast.parentNode) toast.parentNode.removeChild(toast)
+      }, 300)
+      if (timeoutId) clearTimeout(timeoutId)
+    }
 
-    closeBtn.onclick = removeToast;
-    timeoutId = setTimeout(removeToast, duration);
+    closeBtn.onclick = removeToast
+    timeoutId = setTimeout(removeToast, duration)
   },
 
   success(message) {
-    this.show(message, 'success');
+    this.show(message, 'success')
   },
 
   error(message) {
-    this.show(message, 'error');
-  }
-};
+    this.show(message, 'error')
+  },
+}
 
 // Добавляем анимации в head, если их ещё нет
 if (!document.querySelector('#toast-animations')) {
-  const style = document.createElement('style');
-  style.id = 'toast-animations';
+  const style = document.createElement('style')
+  style.id = 'toast-animations'
   style.textContent = `
     @keyframes slideIn {
       from { transform: translateX(100%); opacity: 0; }
@@ -93,6 +93,6 @@ if (!document.querySelector('#toast-animations')) {
       from { transform: translateX(0); opacity: 1; }
       to { transform: translateX(100%); opacity: 0; }
     }
-  `;
-  document.head.appendChild(style);
+  `
+  document.head.appendChild(style)
 }
