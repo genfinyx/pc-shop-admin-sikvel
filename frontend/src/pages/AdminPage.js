@@ -96,18 +96,61 @@ export async function AdminPage(restoreState = false) {
 
 // Глобальные функции
 window.changeTable = async (tableName) => {
-  Session.setActiveTable(tableName)
+  console.log('changeTable called with:', tableName);
 
-  document.querySelectorAll('.list-group-item').forEach((el) => {
-    el.classList.remove('active')
-  })
-  if (event) event.target.classList.add('active')
+  // Сохраняем выбранную таблицу в сессии
+  Session.setActiveTable(tableName);
 
-  const { changeTable } = await import('../components/TableContainer.js')
-  await changeTable(tableName, {
+  // Убираем активный класс со всех пунктов меню
+  document.querySelectorAll('.list-group-item').forEach(el => {
+    el.classList.remove('active');
+  });
+
+  // Находим пункт меню, соответствующий tableName, и добавляем ему класс active
+  // Ищем по атрибуту onclick, который содержит 'changeTable(\'' + tableName + '\')'
+  const targetMenuItem = Array.from(document.querySelectorAll('.list-group-item')).find(el => {
+    const onclickAttr = el.getAttribute('onclick');
+    return onclickAttr && onclickAttr.includes(`changeTable('${tableName}')`);
+  });
+
+  if (targetMenuItem) {
+    targetMenuItem.classList.add('active');
+  } else {
+    // fallback: если не нашли, ищем по тексту (менее надёжно, но работает)
+    const displayName = getTableDisplayNameInternal(tableName); // нужно определить внутри
+    const menuByText = Array.from(document.querySelectorAll('.list-group-item')).find(el =>
+      el.textContent.trim() === displayName
+    );
+    if (menuByText) menuByText.classList.add('active');
+  }
+
+  // Загружаем таблицу
+  const { changeTable: changeTableComponent } = await import('../components/TableContainer.js');
+  await changeTableComponent(tableName, {
     onEdit: (table, id) => console.log('Редактировать', table, id),
-    onDelete: (table, id) => console.log('Удалить', table, id),
-  })
+    onDelete: (table, id) => console.log('Удалить', table, id)
+  });
+};
+
+// Вспомогательная функция для получения отображаемого имени таблицы (дублируется, но можно вынести)
+function getTableDisplayNameInternal(table) {
+  const names = {
+    'main': 'Главная',
+    'user': 'Пользователи',
+    'product': 'Товары',
+    'category': 'Категории',
+    'order': 'Заказы',
+    'order_item': 'Позиции заказов',
+    'cart_item': 'Корзина',
+    'delivery': 'Доставка',
+    'review': 'Отзывы',
+    'wishlist': 'Избранное',
+    'invoice_in': 'Приходные накладные',
+    'invoice_out': 'Расходные накладные',
+    'receipt': 'Чеки',
+    'product_image': 'Изображения товаров'
+  };
+  return names[table] || table;
 }
 
 window.goToReports = async () => {
