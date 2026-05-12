@@ -5,8 +5,14 @@ export function LoginPage() {
   return `
     <div class="login-wrapper">
       <div class="login-card">
-        <div class="d-flex align-items-center mb-4">
-          <div class="logo-square">ПК</div>
+        <div class="d-flex align-items-center mb-4 gap-4">
+          <img 
+              src="/logo.png" 
+              width="906" 
+              height="906" 
+              alt="pcshop логотип"
+              class="w-10 h-10 rounded-md"
+          />
           <div>
             <div class="brand-title">Панель администратора</div>
             <div class="brand-subtitle">Управление магазином</div>
